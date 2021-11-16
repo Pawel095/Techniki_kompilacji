@@ -4,8 +4,8 @@ cflags = -g
 libraries = -lfl
 
 # ZADANIE 1 MAKEFILE
-out: emitter.o error.o init.o lex.yy.o main.o parser.o symbol.o
-	$(cc) $(clfags) $(libraries) -o out emitter.o error.o init.o lex.yy.o main.o parser.o symbol.o
+out: emitter.o error.o init.o lex.yy.o main.o parser.o symbol.o lexutils.o
+	$(cc) $(clfags) $(libraries) -o out emitter.o error.o init.o lex.yy.o main.o parser.o symbol.o lexutils.o
 
 emitter.o : emitter.c global.h
 	$(cc) $(clfags) $(libraries) -c emitter.c 
@@ -16,9 +16,6 @@ error.o : error.c global.h
 init.o : init.c global.h
 	$(cc) $(clfags) $(libraries) -c init.c
 
-lexer.o : lexer.c global.h
-	$(cc) $(clfags) $(libraries) -c lexer.c
-
 main.o : main.c global.h
 	$(cc) $(clfags) $(libraries) -c main.c
 
@@ -27,13 +24,16 @@ parser.o : parser.c global.h
 
 symbol.o : symbol.c global.h
 	$(cc) $(clfags) $(libraries) -c symbol.c
-
 # END: ZADANIE 1 MAKEFILE
+
 lex.yy.c: lexer.l
 	$(flex) lexer.l
 
 lex.yy.o: lex.yy.c
 	$(cc) $(clfags) $(libraries) -c lex.yy.c
+
+lexutils.o: lexutils/lexutils.c lexutils/lexutils.h
+	$(cc) $(clfags) $(libraries) -c lexutils/lexutils.c
 
 clean:
 	-rm -rf lex.yy.c

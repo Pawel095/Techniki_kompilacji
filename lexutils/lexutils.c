@@ -1,4 +1,4 @@
-#include "global.h"
+#include "../global.h"
 int handle_alnum(char lexbuf[])
 {
     int p = lookup(lexbuf);
