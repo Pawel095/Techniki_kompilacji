@@ -29,7 +29,7 @@ symbol.o : symbol.c global.h
 lex.yy.c: lexer.l
 	$(flex) lexer.l
 
-lex.yy.o: lex.yy.c
+lex.yy.o: lex.yy.c global.h lexutils/lexutils.h
 	$(cc) $(clfags) $(libraries) -c lex.yy.c
 
 lexutils.o: lexutils/lexutils.c lexutils/lexutils.h
