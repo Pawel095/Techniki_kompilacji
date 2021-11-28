@@ -2,15 +2,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "parser.tab.h"
 
 #define BSIZE 128
 #define NONE -1
 #define EOS '\0'
-#define NUM 305
-#define DIV 257
-#define MOD 258
-#define ID 259
-#define DONE 260
 extern int tokenval;
 extern int lineno;
 struct entry
@@ -30,4 +26,7 @@ void term();
 void factor();
 void match(int t);
 void emit(int t, int tval);
+
+int yylex();
+void yyerror(char *msg);
 int yylex_destroy ( void );

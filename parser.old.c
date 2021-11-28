@@ -16,7 +16,6 @@ void expr()
   term();
   while (1)
     switch (lookahead)
-
     {
     case '+':
     case '-':
@@ -35,7 +34,6 @@ void term()
   factor();
   while (1)
     switch (lookahead)
-
     {
     case '*':
     case '/':
@@ -53,7 +51,6 @@ void term()
 void factor()
 {
   switch (lookahead)
-
   {
   case '(':
     match('(');

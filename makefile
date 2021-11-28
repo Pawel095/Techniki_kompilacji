@@ -2,40 +2,53 @@ flex = flex
 cc = cc
 cflags = -g
 libraries = -lfl
+bison = bison
+bflags = -d -g
+cccmd = $(cc) $(clfags) $(libraries)
 
-# ZADANIE 1 MAKEFILE
-out: emitter.o error.o init.o lex.yy.o main.o parser.o symbol.o lexutils.o
-	$(cc) $(clfags) $(libraries) -o out emitter.o error.o init.o lex.yy.o main.o parser.o symbol.o lexutils.o
+# ZADANIE 1
+out: emitter.o error.o init.o lex.yy.o main.o symbol.o lexutils.o parser.tab.o
+	$(cccmd) -o out emitter.o error.o init.o lex.yy.o main.o symbol.o lexutils.o parser.tab.o
 
-emitter.o : emitter.c global.h
-	$(cc) $(clfags) $(libraries) -c emitter.c 
+emitter.o : emitter.c global.h parser.tab.h
+	$(cccmd) -c emitter.c 
 
-error.o : error.c global.h
-	$(cc) $(clfags) $(libraries) -c error.c
+error.o : error.c global.h parser.tab.h
+	$(cccmd) -c error.c
 
-init.o : init.c global.h
-	$(cc) $(clfags) $(libraries) -c init.c
+init.o : init.c global.h parser.tab.h
+	$(cccmd) -c init.c
 
-main.o : main.c global.h
-	$(cc) $(clfags) $(libraries) -c main.c
+main.o : main.c global.h parser.tab.h
+	$(cccmd) -c main.c
 
-parser.o : parser.c global.h
-	$(cc) $(clfags) $(libraries) -c parser.c
+# parser.o : parser.c global.h
+# 	$(cccmd) -c parser.c
 
-symbol.o : symbol.c global.h
-	$(cc) $(clfags) $(libraries) -c symbol.c
-# END: ZADANIE 1 MAKEFILE
+symbol.o : symbol.c global.h parser.tab.h
+	$(cccmd) -c symbol.c
 
+
+# ZADANIE 2
 lex.yy.c: lexer.l
 	$(flex) lexer.l
 
-lex.yy.o: lex.yy.c global.h lexutils/lexutils.h
-	$(cc) $(clfags) $(libraries) -c lex.yy.c
+lex.yy.o: lex.yy.c global.h lexutils/lexutils.h parser.tab.h
+	$(cccmd) -c lex.yy.c
 
-lexutils.o: lexutils/lexutils.c lexutils/lexutils.h
-	$(cc) $(clfags) $(libraries) -c lexutils/lexutils.c
+lexutils.o: lexutils/lexutils.c lexutils/lexutils.h parser.tab.h
+	$(cccmd) -c lexutils/lexutils.c
+
+# ZADANIE 3
+parser.tab.c parser.tab.h : parser.y
+	$(bison) $(bflags) parser.y
+
+parser.tab.o : parser.tab.c global.h
+	$(cc) -c parser.tab.c 
 
 clean:
-	-rm -rf lex.yy.c
+	-rm -rf parser.tab.*
+	-rm -rf parser.dot
+	-rm -rf lex.yy.c 
 	-rm -rf *.o
 	-rm out
