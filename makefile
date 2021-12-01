@@ -22,9 +22,6 @@ init.o : init.c global.h parser.tab.h
 main.o : main.c global.h parser.tab.h
 	$(cccmd) -c main.c
 
-# parser.o : parser.c global.h
-# 	$(cccmd) -c parser.c
-
 symbol.o : symbol.c global.h parser.tab.h
 	$(cccmd) -c symbol.c
 
