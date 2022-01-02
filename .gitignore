@@ -1,7 +1,8 @@
 *.o
 out
 bin64*
-parser.tab.*
 parser.dot
 bin64/*
 lexer.cpp
+lexer.hpp
+parser.hpp
