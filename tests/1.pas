@@ -1,0 +1,1 @@
+program example(input, output);

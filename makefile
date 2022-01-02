@@ -1,51 +1,42 @@
 flex = flex
-cc = cc
+compiler = g++
 cflags = -g
-libraries = -lfl
+libraries =
 bison = bison
-bflags = -d -g
-cccmd = $(cc) $(clfags) $(libraries)
+bflags = -g 
 
-# ZADANIE 1
-out: emitter.o error.o init.o lex.yy.o main.o symbol.o lexutils.o parser.tab.o
-	$(cccmd) -o out emitter.o error.o init.o lex.yy.o main.o symbol.o lexutils.o parser.tab.o
+ccmd = ${compiler} ${cflags} ${libraries}
+bisoncmd = $(bison) $(bflags)
+FLEX = $(flex)
 
-emitter.o : emitter.c global.h parser.tab.h
-	$(cccmd) -c emitter.c 
+CSRC = main.cpp lexer.cpp parser.cpp
+HEAD = global.hpp parser.hpp
+objs = $(CSRC:.cpp=.o)
 
-error.o : error.c global.h parser.tab.h
-	$(cccmd) -c error.c
+BIN_OUT = out
 
-init.o : init.c global.h parser.tab.h
-	$(cccmd) -c init.c
-
-main.o : main.c global.h parser.tab.h
-	$(cccmd) -c main.c
-
-symbol.o : symbol.c global.h parser.tab.h
-	$(cccmd) -c symbol.c
+.PHONY: clean cleanobj cleangen
 
 
-# ZADANIE 2
-lex.yy.c: lexer.l
-	$(flex) lexer.l
+${BIN_OUT} : $(objs)
+	$(ccmd) -o $(BIN_OUT) $(objs)
 
-lex.yy.o: lex.yy.c global.h lexutils/lexutils.h parser.tab.h
-	$(cccmd) -c lex.yy.c
+$(objs) : $(HEAD)
 
-lexutils.o: lexutils/lexutils.c lexutils/lexutils.h parser.tab.h
-	$(cccmd) -c lexutils/lexutils.c
+%.o : %.cpp
+	$(ccmd) -c -o $@ $<
 
-# ZADANIE 3
-parser.tab.c parser.tab.h : parser.y
-	$(bison) $(bflags) parser.y
+lexer.cpp: lexer.l parser.hpp
+	flex -o lexer.cpp lexer.l
 
-parser.tab.o : parser.tab.c global.h
-	$(cc) -c parser.tab.c 
+parser.cpp parser.hpp: parser.y
+	$(bisoncmd) --defines=parser.hpp -o parser.cpp parser.y
 
-clean:
-	-rm -rf parser.tab.*
-	-rm -rf parser.dot
-	-rm -rf lex.yy.c 
-	-rm -rf *.o
-	-rm out
+cleanobj:
+	rm -rf $(objs)
+
+cleangen:
+	rm -rf parser.hpp parser.cpp lexer.cpp parser.dot
+
+clean: cleanobj cleangen
+	rm -rf out

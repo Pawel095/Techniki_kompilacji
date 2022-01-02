@@ -2,7 +2,7 @@
 
 make clean
 make
-INPUT=("2+2;" "2-1;" "2*qwea;" "2+2 mod 2-1+(111*3/2)*asd;" "3+asda1* 123123123; 2+2;" "1div 1;")
+INPUT=`find ./tests/ -xtype f`
 for i in "${INPUT[@]}"; do
     echo '==============================='
     echo input: 

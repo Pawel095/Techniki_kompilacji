@@ -1,38 +1,22 @@
 %{
-    #include "global.h"
+    #include "global.hpp"
 %}
 
-%token NUM
-%token DIV
-%token MOD
-%token ID
+%token program_t
+%token var_t
+%token integer_t
+%token real_t
+%token write_t
+%token begin_t
+%token end_t
+%token ident_t
+%token anything_t
+
 
 %%
 
-parse: expr ';' parse | %empty;
+program: program_t ident_t '(' identifier_list ')' ';'        
 
-expr: 
-    expr '+' term { emit('+', NONE); }|
-    expr '-' term { emit('-', NONE); }|
-    term;
-
-term : 
-    term '*' factor { emit('*', NONE); }|
-    term '/' factor { emit('/', NONE); }|
-    term DIV factor { emit(DIV, NONE); }|
-    term MOD factor { emit(MOD, NONE); }|
-    factor;
-
-factor : 
-    '(' expr ')'|
-    ID { emit(ID, $1); }|
-    NUM { emit(NUM, $1); };
+identifier_list: ident_t | identifier_list ','
 
 %%
-
-void parse(){
-    yyparse();
-}
-void yyerror(char *msg){
-    error(msg);
-}

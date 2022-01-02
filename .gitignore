@@ -1,7 +1,7 @@
 *.o
 out
 bin64*
-lex.yy.c
 parser.tab.*
 parser.dot
 bin64/*
+lexer.cpp
