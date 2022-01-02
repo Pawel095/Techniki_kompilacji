@@ -6,3 +6,4 @@ bin64/*
 lexer.cpp
 lexer.hpp
 parser.hpp
+parser.cpp
