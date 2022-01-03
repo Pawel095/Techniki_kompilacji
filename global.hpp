@@ -1,8 +1,8 @@
-#include "parser.hpp"
 #include <iostream>
+#include <vector>
+#include <string>
 
-int yylex();
+#include "lexer.hpp"
 
 int yyparse();
-
 int yyerror(const char* a);

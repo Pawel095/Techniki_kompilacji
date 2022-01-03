@@ -17,7 +17,7 @@ sources != find . -iname '*.cpp' -exec basename {} \;
 sources += parser.cpp lexer.cpp 
 
 headers != find . -iname '*.hpp' -exec basename {} \;
-headers += parser.hpp
+headers += parser.hpp lexer.hpp
 
 objs = $(sources:.cpp=.o)
 

@@ -1,6 +1,5 @@
 #include "global.hpp"
-#include <iostream>
-#include "parser.hpp"
+
 
 int main(int argc, char const *argv[])
 {

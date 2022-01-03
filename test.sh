@@ -17,5 +17,4 @@ for i in "${INPUT[@]}"; do
         exit 1
     fi
 done
-./cls
 exit 0

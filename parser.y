@@ -15,7 +15,7 @@
 
 %%
 
-program: program_t ident_t '(' identifier_list ')' ';'        
+program: program_t ident_t '(' identifier_list ')' ';'
 
 identifier_list: ident_t | identifier_list ','
 
