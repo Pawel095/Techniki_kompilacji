@@ -1,7 +1,6 @@
 %option noyywrap
 %{
     #include "global.hpp"
-    #include "parser.hpp"
 %}
 
 %%

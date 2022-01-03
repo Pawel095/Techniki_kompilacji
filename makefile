@@ -2,7 +2,7 @@ VPATH = .:./lexer_handlers:./parser_utils
 
 flex = flex
 compiler = g++
-cflags = -g --std=c++14
+cflags = -g
 libraries =
 bison = bison
 bflags = -g 
@@ -34,10 +34,10 @@ $(objs) : $(headers)
 %.o : %.cpp
 	$(ccmd) -c -o $@ $<
 
-lexer.cpp: lexer.l parser.hpp
+lexer.cpp: lexer.l
 	flex -o lexer.cpp lexer.l
 
-parser.cpp parser.hpp: parser.y
+parser.cpp parser.hpp: parser.y lexer.cpp
 	$(bisoncmd) --defines=parser.hpp -o parser.cpp parser.y
 
 # REMLAT: Only for debug, kill later

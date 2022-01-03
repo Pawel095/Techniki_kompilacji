@@ -1,6 +1,16 @@
 %{
-    #include "global.hpp"
+    #define YYERROR_VERBOSE 1
 %}
+
+%code requires{
+    #include "global.hpp"
+}
+
+
+%union{
+    string* str;
+}
+
 
 %token program_t
 %token var_t
@@ -10,7 +20,7 @@
 %token begin_t
 %token end_t
 %token ident_t
-%token anything_t
+
 
 
 %%
