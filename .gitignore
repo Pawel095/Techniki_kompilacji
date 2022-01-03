@@ -4,6 +4,5 @@ bin64*
 parser.dot
 bin64/*
 lexer.cpp
-lexer.hpp
 parser.hpp
 parser.cpp

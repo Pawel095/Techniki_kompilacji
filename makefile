@@ -1,6 +1,8 @@
+VPATH = .:./lexer_handlers:./parser_utils
+
 flex = flex
 compiler = g++
-cflags = -g
+cflags = -g --std=c++14
 libraries =
 bison = bison
 bflags = -g 
@@ -9,19 +11,25 @@ ccmd = ${compiler} ${cflags} ${libraries}
 bisoncmd = $(bison) $(bflags)
 FLEX = $(flex)
 
-CSRC = main.cpp lexer.cpp parser.cpp
-HEAD = global.hpp parser.hpp
-objs = $(CSRC:.cpp=.o)
+# sources = main.cpp lexer.cpp parser.cpp l_h.cpp util_p.cpp global.cpp
+# headers = global.hpp parser.hpp lexer.hpp l_h.hpp util_p.hpp
+sources != find . -iname '*.cpp' -exec basename {} \;
+sources += parser.cpp lexer.cpp 
+
+headers != find . -iname '*.hpp' -exec basename {} \;
+headers += parser.hpp
+
+objs = $(sources:.cpp=.o)
 
 BIN_OUT = out
 
-.PHONY: clean cleanobj cleangen
+.PHONY: clean cleanobj cleangen headers
 
 
 ${BIN_OUT} : $(objs)
 	$(ccmd) -o $(BIN_OUT) $(objs)
 
-$(objs) : $(HEAD)
+$(objs) : $(headers)
 
 %.o : %.cpp
 	$(ccmd) -c -o $@ $<
@@ -31,6 +39,9 @@ lexer.cpp: lexer.l parser.hpp
 
 parser.cpp parser.hpp: parser.y
 	$(bisoncmd) --defines=parser.hpp -o parser.cpp parser.y
+
+# REMLAT: Only for debug, kill later
+headers: $(headers)
 
 cleanobj:
 	rm -rf $(objs)
