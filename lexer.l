@@ -5,8 +5,13 @@
 
 %%
 
+[[:blank:]]+ {}
+\n {}
+
 "program" {return program_t;}
 
-. {return ident_t;}
+[[:alpha:]][[:alnum:]]* { yylval.str = new string(yytext); return ident_t;}
+. {return *yytext; }
+
 
 %%

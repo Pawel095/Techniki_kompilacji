@@ -9,6 +9,7 @@
 
 %union{
     string* str;
+    vector<string*>* str_v;
 }
 
 
@@ -19,14 +20,25 @@
 %token write_t
 %token begin_t
 %token end_t
-%token ident_t
+%token <str> ident_t
 
-
+%type <str_v> identifier_list
+%type <str> ident
 
 %%
 
-program: program_t ident_t '(' identifier_list ')' ';'
+program: 
+    program_t ident '(' identifier_list ')' ';' 
+    {program_name = $2;}
+    {io_var = $4;}
+;
 
-identifier_list: ident_t | identifier_list ','
+identifier_list: 
+    ident {$$=new vector<string*>();$$->push_back($1);}
+    | identifier_list ',' ident { $$->push_back($3); }
+    
+;
+ident: ident_t {$$ = yylval.str;}
+;
 
 %%

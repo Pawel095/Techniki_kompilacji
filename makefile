@@ -14,10 +14,17 @@ FLEX = $(flex)
 # sources = main.cpp lexer.cpp parser.cpp l_h.cpp util_p.cpp global.cpp
 # headers = global.hpp parser.hpp lexer.hpp l_h.hpp util_p.hpp
 sources != find . -iname '*.cpp' -exec basename {} \;
-sources += parser.cpp lexer.cpp 
+sources += parser.cpp lexer.cpp
+
+# $(info $(sources))
+# $(info $(sort $(sources)))
 
 headers != find . -iname '*.hpp' -exec basename {} \;
-headers += parser.hpp lexer.hpp
+headers += parser.hpp
+
+# Kill duplicates Xoff Xoff
+sources := $(sort $(sources))
+headers := $(sort $(headers))
 
 objs = $(sources:.cpp=.o)
 

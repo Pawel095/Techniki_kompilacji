@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make clean
+make clean > /dev/null
 make -j 4
 INPUT=`find ./tests/ -xtype f`
 for i in "${INPUT[@]}"; do
@@ -17,4 +17,6 @@ for i in "${INPUT[@]}"; do
         exit 1
     fi
 done
+make clean
+make headers
 exit 0

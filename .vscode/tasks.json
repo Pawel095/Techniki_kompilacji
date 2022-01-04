@@ -4,8 +4,7 @@
             "type": "process",
             "label": "make",
             "command": "make",
-            "args": [
-            ],
+            "args": [],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
