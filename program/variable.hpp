@@ -1,3 +1,6 @@
+#ifndef VARIABLE_H_INCLUDED
+#define VARIABLE_H_INCLUDED
+
 enum TYPES
 {
     INTEGER,
@@ -13,3 +16,4 @@ public:
     Variable(TYPES type);
     ~Variable();
 };
+#endif

@@ -4,36 +4,55 @@
 
 %code requires{
     #include "program/variable.hpp"
+    #include "program/comparison.hpp"
     #include "global.hpp"
 }
-
 
 %union{
     string* str;
     vector<string*>* str_v;
     TYPES type;
-    Variable *variable;
+    Variable *var;
+    Comparison *cmp;
 }
-
 
 %token program_t
 %token var_t
 %token integer_t
 %token real_t
-%token write_t
+%token array_t
 %token begin_t
 %token end_t
+%token of_t
+%token function_t
+%token array_range_t
 %token <str> ident_t
+%token <str> num_t
+
+%token while_t
+%token do_t
+
+%token if_t
+%token else_t
+%token then_t
+
+%token assign_op_t
+%token relop_t
+%token sign
+%token mulop
+%token or_t
+%token not_t
 
 %type <str_v> identifier_list
-%type <str> ident
+%type <str> id
 %type <type> standard_type
-%type <variable> type
+%type <var> type
+%type <str> num
 
 %%
 
 program:
-    program_t ident '(' identifier_list ')' ';' 
+    program_t id '(' identifier_list ')' ';' 
     {
         program_name = $2;
         io_var = $4;
@@ -42,6 +61,14 @@ program:
         #endif
     }
     declarations
+    subprogram_declarations
+    compound_statement '.'
+;
+identifier_list:
+    id
+    {$$=new vector<string*>();$$->push_back($1);} |
+    identifier_list ',' id
+    { $$->push_back($3); }
 ;
 declarations:
     declarations var_t identifier_list ':' type ';'
@@ -57,22 +84,79 @@ declarations:
 type:
     standard_type
     {$$ = new Variable($1);}
-    | %empty // array type goes here
+    | array_t '[' num array_range_t num ']' of_t standard_type
     { $$ = new Variable(TYPES::ARRAY);}
 ;
-
-identifier_list:
-    ident
-    {$$=new vector<string*>();$$->push_back($1);} |
-    identifier_list ',' ident
-    { $$->push_back($3); }
-;
-ident:
-    ident_t {$$ = yylval.str;}
-;
-
 standard_type:
     integer_t {$$ = TYPES::INTEGER;}
     | real_t {$$ = TYPES::REAL;}
+;
+subprogram_declarations: 
+    subprogram_head declarations compound_statement
+;
+subprogram_head:
+    function_t id arguments ':' standard_type ';'
+;
+arguments:
+    '(' parameter_list ')' | %empty
+;
+parameter_list:
+    identifier_list ':' type
+    | parameter_list ';' identifier_list ':' type
+compound_statement: 
+    begin_t 
+    optional_statements 
+    end_t
+;
+optional_statements: 
+    statement_list
+    | %empty
+;
+statement_list:
+    statement 
+    | statement_list ';' statement
+;
+statement: variable assign_op_t expression 
+    | procedure_statement
+    | compound_statement
+    | if_t expression then_t statement else_t statement
+    | while_t expression do_t statement
+;
+variable:
+    id
+    | id '[' expression ']'
+;
+procedure_statement:
+    id
+    | id '(' expression_list ')'
+expression_list:
+    expression
+    | expression_list ',' expression
+;
+expression:
+    simple_expression
+    | simple_expression ',' relop_t simple_expression
+;
+simple_expression:
+    term
+    | sign term
+    | simple_expression sign term
+    | simple_expression or_t term
+;
+term:
+    factor
+    | term mulop factor
+;
+factor: 
+    variable
+    | id '(' expression_list ')'
+    | num
+    | '(' expression ')'
+    | not_t factor
+id:
+    ident_t {$$ = yylval.str;}
+;
+num:
+    num_t { $$ = yylval.str; }
 ;
 %%
