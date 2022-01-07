@@ -1,4 +1,4 @@
-VPATH = .:./program:./parser_utils
+VPATH = .:./program:./debug
 
 flex = flex
 compiler = g++

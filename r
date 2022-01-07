@@ -3,7 +3,7 @@
 make clean > /dev/null
 make -j 4
 INPUT=`find ./tests/ -xtype f`
-for i in "${INPUT[@]}"; do
+for i in $INPUT; do
     echo '==============================='
     echo call: 
     echo ./out $i

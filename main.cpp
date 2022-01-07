@@ -1,6 +1,5 @@
 #include "global.hpp"
 
-
 int main(int argc, char const *argv[])
 {
     const char *cwd = argv[0];
@@ -18,10 +17,8 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-
-
 int yyerror(const char *a)
 {
-    std::cout << a;
+    std::cout<<endl << "In line " << yylineno << ": " << a << endl;
     return 1;
 }
