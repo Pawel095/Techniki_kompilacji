@@ -16,9 +16,3 @@ int main(int argc, char const *argv[])
     yyparse();
     return 0;
 }
-
-int yyerror(const char *a)
-{
-    std::cout<<endl << "In line " << yylineno << ": " << a << endl;
-    return 1;
-}

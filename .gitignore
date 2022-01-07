@@ -2,6 +2,7 @@
 out
 bin64*
 parser.dot
+parser.output
 bin64/*
 lexer.cpp
 parser.hpp

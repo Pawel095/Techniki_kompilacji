@@ -42,7 +42,7 @@
 %token assign_op_t
 %token relop_t
 %token <sign> sign_t
-%token mulop
+%token mulop_t
 %token or_t
 %token not_t
 
@@ -51,6 +51,7 @@
 %type <type> standard_type
 %type <var> type
 %type <str> num
+%type <str> variable
 
 %%
 
@@ -60,7 +61,7 @@ program:
         program_name = $2;
         io_var = $4;
         #ifdef DEBUG
-        // cout<<"Program name is "<<$2->c_str()<<endl;
+        cout<<"Program name is "<<$2->c_str()<<endl;
         #endif
     }
     declarations
@@ -80,7 +81,7 @@ declarations:
     {
         #ifdef DEBUG
         for(auto var_name : *$3){
-            // cout<<var_name->c_str()<<":"<<$5->__str__()<<endl;
+            cout<<var_name->c_str()<<":"<<$5->__str__()<<endl;
         }
         #endif
     }
@@ -94,25 +95,27 @@ type:
     { $$ = new Variable(TYPES::ARRAY);}
 ;
 standard_type:
-    integer_t {$$ = TYPES::INTEGER;}
+    integer_t 
+    {$$ = TYPES::INTEGER;}
 
-    | real_t {$$ = TYPES::REAL;}
+    | real_t 
+    {$$ = TYPES::REAL;}
 ;
 subprogram_declarations:
     subprogram_declarations subprogram_declaration ';'
     | %empty
 ;
 subprogram_declaration: 
-    subprogram_head declarations compound_statement 
+    subprogram_head declarations compound_statement
 ;
 subprogram_head:
     function_t id arguments ':' standard_type ';'
 
-    | procedure_t id arguments ';' 
-    /* {cout<<"Procedure "<<$2->c_str()<<endl;} */
+    | procedure_t id arguments ';'
+    {cout<<"Procedure "<<$2->c_str()<<endl;}
 ;
 arguments:
-    '(' parameter_list ')' 
+    '(' parameter_list ')'
 
     | %empty
 ;
@@ -122,7 +125,7 @@ parameter_list:
     | parameter_list ';' identifier_list ':' type
 ;
 compound_statement: 
-    begin_t 
+    begin_t
     optional_statements 
     end_t
 ;
@@ -134,14 +137,15 @@ statement_list:
     statement 
     | statement_list ';' statement
 ;
-statement: variable assign_op_t expression 
+statement: 
+    variable assign_op_t expression 
     | procedure_statement
     | compound_statement
-    | if_t expression then_t statement else_t statement
+    | if_t expression then_t statement else_t statement 
     | while_t expression do_t statement
 ;
 variable:
-    id
+    id { $$ = $1;}
     | id '[' expression ']'
 ;
 procedure_statement:
@@ -149,25 +153,26 @@ procedure_statement:
     | id '(' expression_list ')'
 ;
 expression_list:
-    expression
+    expression 
     | expression_list ',' expression
 ;
 expression:
-    simple_expression
-    | simple_expression ',' relop_t simple_expression
+    simple_expression 
+    | simple_expression relop_t simple_expression 
 ;
 simple_expression:
-    term
-    | sign_t term {cout<<"Sign"<<$1<<endl;}
-    | simple_expression sign_t term {cout<<"Sign"<<$2<<endl;}
+    term 
+    | sign_t term 
+    | simple_expression sign_t term 
     | simple_expression or_t term
 ;
 term:
-    factor
-    | term mulop factor
+    factor 
+
+    | term mulop_t factor 
 ;
 factor: 
-    variable
+    variable {cout<<"variable: "<<$1->c_str()<<endl;}
     | id '(' expression_list ')'
     | num
     | '(' expression ')'

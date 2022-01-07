@@ -2,7 +2,7 @@
 
 make clean > /dev/null
 make -j 4
-INPUT=`find ./tests/ -xtype f`
+INPUT=`find ./bin64/ -xtype f -iname *.pas`
 for i in $INPUT; do
     echo '==============================='
     echo call: 
@@ -14,6 +14,8 @@ for i in $INPUT; do
     echo code: $code
     if [ $code -ne  0 ]; then
         echo "ERROR IN TEST!"
+        make clean > /dev/null
+        make headers > /dev/null
         exit 1
     fi
 done

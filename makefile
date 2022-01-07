@@ -4,8 +4,8 @@ flex = flex
 compiler = g++
 cflags = -g
 libraries =
-bison = bison
-bflags = -g 
+bison = bison 
+bflags = -g --verbose
 
 ccmd = ${compiler} ${cflags} ${libraries}
 bisoncmd = $(bison) $(bflags)
@@ -54,7 +54,7 @@ cleanobj:
 	rm -rf $(objs)
 
 cleangen:
-	rm -rf parser.hpp parser.cpp lexer.cpp parser.dot
+	rm -rf parser.hpp parser.cpp lexer.cpp parser.dot parser.output
 
 clean: cleanobj cleangen
 	rm -rf out
