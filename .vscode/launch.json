@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/t12.pas"
+                "./bin64/p0.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -12,7 +12,9 @@ int main(int argc, char const *argv[])
     if (yyin == nullptr)
     {
         std::cout << "Wrong path: " << argv[1] << std::endl;
+        exit(1);
     }
     yyparse();
+    program->c_str();
     return 0;
 }

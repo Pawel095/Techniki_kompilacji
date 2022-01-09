@@ -1,11 +1,14 @@
 %{
     #define YYERROR_VERBOSE 1
+    bool ENABLEDP=true;
 %}
 
 %code requires{
     #include "program/variable.hpp"
     #include "program/comparison.hpp"
     #include "program/sign.hpp"
+    #include "./debug/printer.hpp"
+    #include "program/Symbol.hpp"
     #include "global.hpp"
 }
 
@@ -16,6 +19,7 @@
     Variable *var;
     Comparison *cmp;
     SIGN sign;
+    vector<Symbol*>* symbol_v;
 }
 
 %token program_t
@@ -29,8 +33,8 @@
 %token function_t
 %token procedure_t
 %token array_range_t
-%token <str> ident_t
-%token <str> num_t
+%token ident_t
+%token num_t
 
 %token while_t
 %token do_t
@@ -41,65 +45,68 @@
 
 %token assign_op_t
 %token relop_t
-%token <sign> sign_t
+%token sign_t
 %token mulop_t
 %token or_t
 %token not_t
 
-%type <str_v> identifier_list
 %type <str> id
-%type <type> standard_type
-%type <var> type
-%type <str> num
-%type <str> variable
+%type <str_v> identifier_list
+%type <symbol_v> declarations
 
 %%
 
 program:
     program_t id '(' identifier_list ')' ';' 
     {
-        program_name = $2;
-        io_var = $4;
-        #ifdef DEBUG
-        cout<<"Program name is "<<$2->c_str()<<endl;
-        #endif
+        print_if_debug($2->c_str(),"program[0]->id",ENABLEDP);
+        program->name= *$2;
+        print_if_debug($4,"program[0]->identifier_list",ENABLEDP);
+        program->io_params= *$4;
     }
     declarations
+    {
+        print_if_debug($8,"program[1]->declarations",ENABLEDP);
+    }
     subprogram_declarations
     compound_statement '.'
 ;
 identifier_list:
     id
-    {$$=new vector<string*>();$$->push_back($1);} 
-    
+    {
+        print_if_debug($1->c_str(),"identifier_list[0]->id",ENABLEDP);
+        $$ = new vector<string*>();
+        $$->push_back($1);
+    }
     | identifier_list ',' id
-    { $$->push_back($3); }
+    {
+        print_if_debug($3->c_str(),"identifier_list[1]->id",ENABLEDP);
+        $$->push_back($3);
+    }
 
 ;
 declarations:
     declarations var_t identifier_list ':' type ';'
     {
-        #ifdef DEBUG
-        for(auto var_name : *$3){
-            cout<<var_name->c_str()<<":"<<$5->__str__()<<endl;
+        $$ = $1;
+        print_if_debug($3,"declarations[0]->identifier_list",ENABLEDP);
+        for (auto ident:*$3){
+            
         }
-        #endif
     }
     | %empty
+    {
+        print_if_debug("[]","declarations[1]->\%empty",ENABLEDP);
+        $$ = new vector<Symbol*>();
+    }
 ;
 type:
     standard_type
-    {$$ = new Variable($1);}
-
     | array_t '[' num array_range_t num ']' of_t standard_type
-    { $$ = new Variable(TYPES::ARRAY);}
 ;
 standard_type:
-    integer_t 
-    {$$ = TYPES::INTEGER;}
-
-    | real_t 
-    {$$ = TYPES::REAL;}
+    integer_t
+    | real_t
 ;
 subprogram_declarations:
     subprogram_declarations subprogram_declaration ';'
@@ -112,7 +119,7 @@ subprogram_head:
     function_t id arguments ':' standard_type ';'
 
     | procedure_t id arguments ';'
-    {cout<<"Procedure "<<$2->c_str()<<endl;}
+    
 ;
 arguments:
     '(' parameter_list ')'
@@ -145,7 +152,7 @@ statement:
     | while_t expression do_t statement
 ;
 variable:
-    id { $$ = $1;}
+    id 
     | id '[' expression ']'
 ;
 procedure_statement:
@@ -167,21 +174,24 @@ simple_expression:
     | simple_expression or_t term
 ;
 term:
-    factor 
-
+    factor
     | term mulop_t factor 
 ;
 factor: 
-    variable {cout<<"variable: "<<$1->c_str()<<endl;}
+    variable
     | id '(' expression_list ')'
     | num
     | '(' expression ')'
     | not_t factor
 ;
 id:
-    ident_t {$$ = yylval.str;}
+    ident_t 
+    {
+        print_if_debug($$->c_str(),"id->ident_t",ENABLEDP);
+        yylval.str = $$;
+    }
 ;
 num:
-    num_t { $$ = yylval.str; }
+    num_t 
 ;
 %%
