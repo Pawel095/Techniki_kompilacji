@@ -53,6 +53,14 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     print_if_debug(yytext,"of_t");
     return of_t;
 }
+"array" {
+    print_if_debug(yytext,"array_t");
+    return array_t;
+}
+".." {
+    print_if_debug(yytext,"array_t");
+    return array_range_t;
+}
 "if" {
     print_if_debug(yytext,"if_t");
     return if_t;
@@ -65,7 +73,19 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     print_if_debug(yytext,"else_t");
     return else_t;
 }
+"not" {
+    print_if_debug(yytext,"not_t");
+    return not_t;
+}
+"while" {
+    print_if_debug(yytext,"while_t");
+    return while_t;
+}
 
+"do" {
+    print_if_debug(yytext,"do_t");
+    return do_t;
+}
 
 ":=" {
     print_if_debug(yytext,"assign_op_t");
