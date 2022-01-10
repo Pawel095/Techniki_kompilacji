@@ -4,8 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "variable.hpp"
-#include "statement.hpp"
+#include "Expression.hpp"
 #include "Symbol.hpp"
 
 using namespace std;
@@ -14,15 +13,18 @@ class Program
 {
 private:
 public:
+    // BEGIN: IGNORE IN COMPILER
     string name;
     vector<string *> io_params;
+    // END: IGNORE IN COMPILER
+
     vector<Symbol *> global_vars;
     // TODO: add later
     // procedures
     // functions
-    vector<Statement *> main;
+    vector<Expression *> main;
     Program();
     ~Program();
-    void c_str();
+    void print();
 };
 #endif

@@ -24,7 +24,9 @@ void print_if_debug(const vector<Symbol *> *symbols, const char *prefix, bool en
     {
         for (auto symbol : *symbols)
         {
-            cout << prefix << "'symbol'" << endl;
+            cout << prefix << ": \'";
+            symbol->print();
+            cout << "\'" << endl;
         }
     }
 }

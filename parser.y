@@ -4,7 +4,6 @@
 %}
 
 %code requires{
-    #include "program/variable.hpp"
     #include "program/comparison.hpp"
     #include "program/sign.hpp"
     #include "./debug/printer.hpp"
@@ -15,11 +14,11 @@
 %union{
     string* str;
     vector<string*>* str_v;
-    TYPES type;
-    Variable *var;
-    Comparison *cmp;
-    SIGN sign;
     vector<Symbol*>* symbol_v;
+    Comparison* cmp;
+    STD_TYPES std_type;
+    SIGN sign;
+
 }
 
 %token program_t
@@ -53,6 +52,8 @@
 %type <str> id
 %type <str_v> identifier_list
 %type <symbol_v> declarations
+%type <std_type> standard_type
+%type <std_type> type
 
 %%
 
@@ -67,8 +68,9 @@ program:
     declarations
     {
         print_if_debug($8,"program[1]->declarations",ENABLEDP);
+        program->global_vars=*$8;
     }
-    subprogram_declarations
+    subprogram_declarations {/* TODO: later */}
     compound_statement '.'
 ;
 identifier_list:
@@ -91,7 +93,10 @@ declarations:
         $$ = $1;
         print_if_debug($3,"declarations[0]->identifier_list",ENABLEDP);
         for (auto ident:*$3){
-            
+            Symbol* s = new Symbol();
+            s->name = ident;
+            s->type = $5;
+            $$->push_back(s);
         }
     }
     | %empty
@@ -102,11 +107,23 @@ declarations:
 ;
 type:
     standard_type
+    {
+        $$ = $1;
+    }
     | array_t '[' num array_range_t num ']' of_t standard_type
+    {
+        // TODO: obsługa array
+    }
 ;
 standard_type:
     integer_t
+    {
+        $$ = STD_TYPES::INTEGER;
+    }
     | real_t
+    {
+        $$ = STD_TYPES::REAL;
+    }
 ;
 subprogram_declarations:
     subprogram_declarations subprogram_declaration ';'

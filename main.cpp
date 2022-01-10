@@ -15,6 +15,6 @@ int main(int argc, char const *argv[])
         exit(1);
     }
     yyparse();
-    program->c_str();
+    program->print();
     return 0;
 }

@@ -2,6 +2,8 @@
     "files.associations": {
         "*.csv": "csv (semicolon)",
         "**/requirements{/**,*}.{txt,in}": "pip-requirements",
-        "string": "cpp"
+        "string": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp"
     }
 }
