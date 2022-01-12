@@ -1,4 +1,4 @@
-VPATH = .:./program:./debug:./libfort/lib
+VPATH = .:./program:./debug:./libfort/lib:./asmfor
 
 flex = flex
 compiler = g++
@@ -28,7 +28,7 @@ headers := $(sort $(headers))
 
 objs = $(filter-out %.c,$(sources:.cpp=.o))
 # Special case for libfort
-objs += libfort/lib/fort.c
+objs += libfort/lib/fort.o
 
 BIN_OUT = out
 
@@ -43,6 +43,9 @@ $(objs) : $(headers)
 %.o : %.cpp
 	$(ccmd) -c -o $@ $<
 
+%.o : %.c
+	$(ccmd) -c -o $@ $<
+
 lexer.cpp: lexer.l
 	flex -o lexer.cpp lexer.l
 
@@ -53,8 +56,7 @@ parser.cpp parser.hpp: parser.y lexer.cpp
 headers: $(headers)
 
 cleanobj:
-	# rm -rf $(objs)
-	echo $(objs)
+	rm -rf $(objs)
 
 cleangen:
 	rm -rf parser.hpp parser.cpp lexer.cpp parser.dot parser.output output.asm

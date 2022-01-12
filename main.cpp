@@ -14,8 +14,12 @@ int main(int argc, char const *argv[])
     if (yyin == nullptr)
     {
         std::cout << "Wrong path: " << argv[1] << std::endl;
+        yylex_destroy();
         exit(1);
     }
+    init();
     yyparse();
+    cleanup();
+    cout<<memory.dump().to_string()<<endl;
     return 0;
 }

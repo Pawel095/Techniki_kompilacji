@@ -13,7 +13,7 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 %%
 
 \{[^\{]*?\} {
-    // comment. ignore.
+    // comment. ignore
 }
 
 [[:blank:]]+ {
@@ -66,6 +66,9 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     print_if_debug(yytext,"array_t",ENABLEDL);
     return array_range_t;
 }
+
+
+
 "if" {
     print_if_debug(yytext,"if_t",ENABLEDL);
     return if_t;
@@ -82,6 +85,9 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     print_if_debug(yytext,"not_t",ENABLEDL);
     return not_t;
 }
+
+
+
 "while" {
     print_if_debug(yytext,"while_t",ENABLEDL);
     return while_t;
@@ -171,6 +177,12 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     // TODO: nie ma zwracanego tekstu
     return or_t;
 }
+
+"write" {
+    print_if_debug(yytext,"write_t",ENABLEDL);
+    return write_t;
+}
+
 
 {NUM} {
     print_if_debug(yytext,"num_t",ENABLEDL);

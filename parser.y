@@ -1,16 +1,19 @@
 %{
     #define YYERROR_VERBOSE 1
     bool ENABLEDP=true;
+    const char* ENTRYPOINT_NAME = "entrypoint";
 %}
 
 %code requires{
-    #include "./debug/printer.hpp"
     #include "global.hpp"
+    #include "debug/printer.hpp"
+    #include "asmfor/asmfor.hpp"
 }
 
 %union{
     string* str;
     vector<string*>* str_v;
+    int memaddr;
     RELOP cmp;
     STD_TYPES std_type;
     SIGN sign;
@@ -27,8 +30,9 @@
 %token function_t
 %token procedure_t
 %token array_range_t
-%token ident_t
-%token num_t
+
+%token <str> ident_t
+%token <str> num_t
 
 %token while_t
 %token do_t
@@ -37,6 +41,9 @@
 %token else_t
 %token then_t
 
+%token write_t
+%token read_t
+
 %token assign_op_t
 %token relop_t
 %token sign_t
@@ -44,37 +51,84 @@
 %token or_t
 %token not_t
 
-%type <str> id
-%type <str_v> identifier_list
-%type <std_type> standard_type
-%type <std_type> type
-%type <str> num
 
+%type <std_type> standard_type
+%type <str_v> identifier_list
+%type <std_type> type
+%type <memaddr> factor
+%type <memaddr> term
 
 %%
 
 program:
-    program_t id '(' identifier_list ')' ';' 
-    declarations
-    subprogram_declarations
-    compound_statement '.'
+    program_t ident_t '(' identifier_list ')' ';'
+    {
+        string msg = string("nazwa programu: ") + string(*$2);
+        print_if_debug(msg,"program",ENABLEDP);
+
+        print_if_debug($4,"program",ENABLEDP);
+        outfile<<"jump.i #"<<ENTRYPOINT_NAME<<endl;
+    }
+    declarations {
+        // Global variables, do nothing here, vars are updated in `declarations`
+
+    }
+    subprogram_declarations//TODO: rozszeżony
+    {
+        // TODO: kod z funkcji :: close.
+
+        outfile<<ENTRYPOINT_NAME<<":"<<endl;
+    }
+    compound_statement
+
+    '.'
+    {
+        outfile<<"exit"<<endl;
+    }
 ;
 identifier_list:
-    id
-    | identifier_list ',' id
+    ident_t
+    {
+        $$ = new vector<string* >();
+        $$->push_back($1);
+    }
+    | identifier_list ',' ident_t
+    {
+        $$ = new vector<string* >();
+        for (auto ident : *$1){
+            $$->push_back(ident);
+        }
+        $$->push_back($3);
+    }
 
 ;
 declarations:
     declarations var_t identifier_list ':' type ';'
+    {
+        for (auto id : *$3){
+            Entry* e = new Entry();
+            e->name_or_value=*id;
+            e->type = ENTRY_TYPES::VAR;
+            e->vartype = $5;
+            int i=memory.add_entry(e);
+            memory.allocate(i);
+        }
+    }
     | %empty
 ;
 type:
     standard_type
-    | array_t '[' num array_range_t num ']' of_t standard_type
+    {
+        $$ = $1;
+    }
+    | array_t '[' num_t array_range_t num_t ']' of_t standard_type
+    {
+        // TODO: array type
+    }
 ;
 standard_type:
-    integer_t
-    | real_t
+    integer_t {$$ = STD_TYPES::INTEGER;}
+    | real_t {$$ = STD_TYPES::REAL;}
 ;
 subprogram_declarations:
     subprogram_declarations subprogram_declaration ';'
@@ -84,14 +138,13 @@ subprogram_declaration:
     subprogram_head declarations compound_statement
 ;
 subprogram_head:
-    function_t id arguments ':' standard_type ';'
+    function_t ident_t arguments ':' standard_type ';'
 
-    | procedure_t id arguments ';'
+    | procedure_t ident_t arguments ';'
     
 ;
 arguments:
     '(' parameter_list ')'
-
     | %empty
 ;
 parameter_list:
@@ -118,14 +171,15 @@ statement:
     | compound_statement
     | if_t expression then_t statement else_t statement
     | while_t expression do_t statement
+    | write_t '(' identifier_list ')'
 ;
 variable:
-    id
-    | id '[' expression ']'
+    ident_t
+    | ident_t '[' expression ']' // TODO: later.
 ;
 procedure_statement:
-    id
-    | id '(' expression_list ')'
+    ident_t
+    | ident_t '(' expression_list ')'
 ;
 expression_list:
     expression
@@ -139,23 +193,34 @@ simple_expression:
     term
     | sign_t term
     | simple_expression sign_t term
+    {
+        print_if_debug("Addition!","simple_expresson[2]",ENABLEDP);
+    }
     | simple_expression or_t term
 ;
 term:
     factor
-    | term mulop_t factor 
+    {
+        print_if_debug(std::to_string($1),"term->factor",ENABLEDP);
+        $$=$1;
+    }
+    | term mulop_t factor
 ;
-factor: 
+factor: // Send memory adress up, not the bloody value.
     variable
-    | id '(' expression_list ')'
-    | num
-    | '(' expression ')'
+    | ident_t '(' expression_list ')' // Function call
+    | num_t // a number
+    {
+        // Constant! Write the assembler to mov into memory! RETURN ADDRESS このバカの学生！.
+        Entry* e = new Entry();
+        e->name_or_value=*$1;
+        e->type = ENTRY_TYPES::CONST;
+        int i=memory.add_entry(e);
+        memory.allocate(i);
+        outfile<<asmfor_movconst(e)<<endl;
+        $$ = i;
+    }
+    | '(' expression ')' // 'do this first'
     | not_t factor
-;
-id:
-    ident_t 
-;
-num:
-    num_t
 ;
 %%

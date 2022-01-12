@@ -1,0 +1,33 @@
+
+#include <vector>
+#include <string>
+#include <iostream>
+
+#include "enums.hpp"
+#include "Entry.hpp"
+#include "../libfort/lib/fort.hpp"
+
+#ifndef MEMORY_H
+#define MEMORY_H
+
+class Memory
+{
+private:
+    std::vector<Entry *> table;
+    SCOPE scope;
+    int address_pointer = 0;
+
+public:
+    Memory();
+    ~Memory();
+    // TODO: implelent
+    void set_scope(SCOPE scope);
+
+    int add_entry(Entry *e);
+    void allocate(int id);
+
+    Entry* get(string id);
+
+    fort::char_table dump();
+};
+#endif

@@ -6,7 +6,7 @@ void print_if_debug(const char *c, const char *prefix, bool enabled)
     if (enabled)
         cout << prefix << ": \'" << c << "\' " << endl;
 }
-void print_if_debug(const string c, const char *prefix, bool enabled)
+void print_if_debug(string c, const char *prefix, bool enabled)
 {
     if (enabled)
     {

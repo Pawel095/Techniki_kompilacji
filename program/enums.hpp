@@ -1,3 +1,5 @@
+#include <string>
+
 #ifndef ENUMS_H
 #define ENUMS_H
 
@@ -19,6 +21,21 @@ enum STD_TYPES
 {
     INTEGER,
     REAL,
+    UNDEFINED
 };
+enum SCOPE
+{
+    GLOBAL,
+    FUNCTION
+};
+enum ENTRY_TYPES
+{
+    VAR,
+    CONST,
+    FUNC,
+    PROCEDURE
+};
+std::string enum2str(ENTRY_TYPES e);
+std::string enum2str(STD_TYPES e);
 
 #endif // ENUMS_H
