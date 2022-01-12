@@ -2,6 +2,8 @@
 
 int main(int argc, char const *argv[])
 {
+    yydebug = 0;
+
     const char *cwd = argv[0];
     const char *infile = argv[1];
     if (argc != 2)
@@ -15,6 +17,5 @@ int main(int argc, char const *argv[])
         exit(1);
     }
     yyparse();
-    program->print();
     return 0;
 }
