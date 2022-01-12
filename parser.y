@@ -46,7 +46,7 @@
 
 %token assign_op_t
 %token relop_t
-%token sign_t
+%token <sign> sign_t
 %token mulop_t
 %token or_t
 %token not_t
@@ -57,6 +57,9 @@
 %type <std_type> type
 %type <memaddr> factor
 %type <memaddr> term
+%type <memaddr> simple_expression
+%type <memaddr> expression
+%type <str> variable
 
 %%
 
@@ -167,11 +170,21 @@ statement_list:
 ;
 statement: 
     variable assign_op_t expression
+    {
+        print_if_debug(*$1,"statement[0]->variable",ENABLEDP);
+        print_if_debug(to_string($3),"statement[0]->expression",ENABLEDP);
+        auto src = memory.get($3);
+        auto dest = memory.get(*$1);
+        outfile<<asmfor_movassign(src,dest);
+    }
     | procedure_statement
     | compound_statement
     | if_t expression then_t statement else_t statement
     | while_t expression do_t statement
     | write_t '(' identifier_list ')'
+    {
+        outfile<<asmfor_write(*$3);
+    }
 ;
 variable:
     ident_t
@@ -194,7 +207,14 @@ simple_expression:
     | sign_t term
     | simple_expression sign_t term
     {
-        print_if_debug("Addition!","simple_expresson[2]",ENABLEDP);
+        if ($2 == SIGN::PLUS){
+            Entry* result = memory.add_temp_var(STD_TYPES::INTEGER);
+            Entry *e1 = memory.get($1);
+            Entry *e2 = memory.get($3);
+            print_if_debug("Addition!","simple_expresson[2]",ENABLEDP);
+            outfile<<asmfor_add2memaddr(e1,e2,result);
+            $$=result->address;
+        }
     }
     | simple_expression or_t term
 ;
@@ -217,8 +237,8 @@ factor: // Send memory adress up, not the bloody value.
         e->type = ENTRY_TYPES::CONST;
         int i=memory.add_entry(e);
         memory.allocate(i);
-        outfile<<asmfor_movconst(e)<<endl;
-        $$ = i;
+        outfile<<asmfor_movconst(e);
+        $$ = e->address;
     }
     | '(' expression ')' // 'do this first'
     | not_t factor

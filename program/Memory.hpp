@@ -16,17 +16,20 @@ private:
     std::vector<Entry *> table;
     SCOPE scope;
     int address_pointer = 0;
+    unsigned int temp_var_count = 0;
 
 public:
     Memory();
     ~Memory();
-    // TODO: implelent
+    // TODO: implement
     void set_scope(SCOPE scope);
 
     int add_entry(Entry *e);
+    Entry *add_temp_var(STD_TYPES type);
     void allocate(int id);
 
-    Entry* get(string id);
+    Entry *get(string id);
+    Entry *get(int memaddr);
 
     fort::char_table dump();
 };

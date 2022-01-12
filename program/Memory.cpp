@@ -31,6 +31,18 @@ int Memory::add_entry(Entry *e)
     this->table.push_back(e);
     return index;
 }
+Entry *Memory::add_temp_var(STD_TYPES type)
+{
+    Entry *e = new Entry();
+    e->type = ENTRY_TYPES::VAR;
+    e->vartype = type;
+    e->name_or_value = string("$t") + to_string(this->temp_var_count);
+    this->temp_var_count += 1;
+    int i = this->add_entry(e);
+    this->allocate(i);
+
+    return e;
+}
 // ONLY FOR VARTYPE AND CONST
 void Memory::allocate(int id)
 {
@@ -76,6 +88,17 @@ Entry *Memory::get(string id)
     for (auto a : this->table)
     {
         if (a->name_or_value == id)
+        {
+            return a;
+        }
+    }
+    return nullptr;
+}
+Entry *Memory::get(int memaddr)
+{
+    for (auto a : this->table)
+    {
+        if (a->address == memaddr)
         {
             return a;
         }
