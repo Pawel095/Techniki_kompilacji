@@ -19,10 +19,9 @@ std::string asmfor_movassign(Entry *src, Entry *dest)
     cout << "\'asmfor_movassign\' WORKS FOR INT ONLY RIGHT NOW!!!" << endl;
     std::string instr;
     instr = string("mov.i ");
-
-
     return instr + to_string(src->address) + ", " + std::to_string(dest->address) + "\n";
 }
+
 std::string asmfor_add2memaddr(Entry *e1, Entry *e2, Entry *result)
 {
     // TODO: check if types match later
@@ -30,6 +29,13 @@ std::string asmfor_add2memaddr(Entry *e1, Entry *e2, Entry *result)
 
     return string("add.i ") + to_string(e1->address) + ", " + to_string(e2->address) + "," + to_string(result->address) + "\n";
 }
+std::string asmfor_sub2memaddr(Entry *e1, Entry *e2, Entry *result){
+    // TODO: check if types match later
+    cout << "\'asmfor_sub2memaddr\' WORKS FOR INT ONLY RIGHT NOW!!!" << endl;
+
+    return string("sub.i ") + to_string(e1->address) + ", " + to_string(e2->address) + "," + to_string(result->address) + "\n";
+}
+
 std::string asmfor_write(vector<string *> ids)
 {
     string r = string("");

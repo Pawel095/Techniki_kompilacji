@@ -205,6 +205,9 @@ expression:
 simple_expression:
     term
     | sign_t term
+    {
+        print_if_debug("Negate","simple_expresson[1]",ENABLEDP);
+    }
     | simple_expression sign_t term
     {
         if ($2 == SIGN::PLUS){
@@ -213,6 +216,14 @@ simple_expression:
             Entry *e2 = memory.get($3);
             print_if_debug("Addition!","simple_expresson[2]",ENABLEDP);
             outfile<<asmfor_add2memaddr(e1,e2,result);
+            $$=result->address;
+        }
+        if ($2 == SIGN::MINUS){
+            Entry* result = memory.add_temp_var(STD_TYPES::INTEGER);
+            Entry *e1 = memory.get($1);
+            Entry *e2 = memory.get($3);
+            print_if_debug("Subtraction!","simple_expresson[2]",ENABLEDP);
+            outfile<<asmfor_sub2memaddr(e1,e2,result);
             $$=result->address;
         }
     }
