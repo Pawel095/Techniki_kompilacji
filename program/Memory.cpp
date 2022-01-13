@@ -3,9 +3,7 @@
 
 Memory::Memory() {}
 
-Memory::~Memory()
-{
-}
+Memory::~Memory() {}
 
 void Memory::set_scope(SCOPE scope)
 {
@@ -47,6 +45,7 @@ Entry *Memory::add_temp_var(STD_TYPES type)
 void Memory::allocate(int id)
 {
     auto e = this->table[id];
+    e->mem_index = id;
     if (e->type == ENTRY_TYPES::VAR)
     {
         switch (e->vartype)
@@ -61,21 +60,6 @@ void Memory::allocate(int id)
             break;
         }
     }
-    else if (e->type == ENTRY_TYPES::CONST)
-    {
-        if (isInteger(&e->name_or_value))
-        {
-            e->address = this->address_pointer;
-            this->address_pointer += 4;
-            e->vartype = STD_TYPES::INTEGER;
-        }
-        else
-        {
-            e->address = this->address_pointer;
-            this->address_pointer += 8;
-            e->vartype = STD_TYPES::REAL;
-        }
-    }
     else
     {
         // Capture all not variables and skip if not debugging.
@@ -85,10 +69,12 @@ void Memory::allocate(int id)
 }
 Entry *Memory::get(string id)
 {
-    for (auto a : this->table)
+    for (size_t i = 0; i < this->table.size(); i++)
     {
+        auto a = this->table[i];
         if (a->name_or_value == id)
         {
+            a->mem_index = i;
             return a;
         }
     }
@@ -96,12 +82,18 @@ Entry *Memory::get(string id)
 }
 Entry *Memory::get(int memaddr)
 {
-    for (auto a : this->table)
+    for (size_t i = 0; i < this->table.size(); i++)
     {
+        auto a = this->table[i];
         if (a->address == memaddr)
         {
+            a->mem_index = i;
             return a;
         }
     }
     return nullptr;
+}
+Entry *Memory::operator[](int index)
+{
+    return this->table[index];
 }

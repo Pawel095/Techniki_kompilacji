@@ -11,8 +11,6 @@ ccmd = ${compiler} ${cflags} ${libraries}
 bisoncmd = $(bison) $(bflags)
 FLEX = $(flex)
 
-# sources = main.cpp lexer.cpp parser.cpp l_h.cpp util_p.cpp global.cpp
-# headers = global.hpp parser.hpp lexer.hpp l_h.hpp util_p.hpp
 sources != find . -iname '*.cpp' -exec basename {} \;
 sources += parser.cpp lexer.cpp libfort/lib/fort.c
 

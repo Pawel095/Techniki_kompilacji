@@ -17,6 +17,7 @@
     RELOP cmp;
     STD_TYPES std_type;
     SIGN sign;
+    MULOP mulop;
 }
 
 %token program_t
@@ -47,7 +48,7 @@
 %token assign_op_t
 %token relop_t
 %token <sign> sign_t
-%token mulop_t
+%token <mulop> mulop_t
 %token or_t
 %token not_t
 
@@ -59,7 +60,7 @@
 %type <memaddr> term
 %type <memaddr> simple_expression
 %type <memaddr> expression
-%type <str> variable
+%type <memaddr> variable
 
 %%
 
@@ -68,23 +69,16 @@ program:
     {
         string msg = string("nazwa programu: ") + string(*$2);
         print_if_debug(msg,"program",ENABLEDP);
-
         print_if_debug($4,"program",ENABLEDP);
         outfile<<"jump.i #"<<ENTRYPOINT_NAME<<endl;
     }
-    declarations {
-        // Global variables, do nothing here, vars are updated in `declarations`
-
-    }
+    declarations
     subprogram_declarations//TODO: rozszeżony
     {
         // TODO: kod z funkcji :: close.
-
         outfile<<ENTRYPOINT_NAME<<":"<<endl;
     }
-    compound_statement
-
-    '.'
+    compound_statement '.'
     {
         outfile<<"exit"<<endl;
     }
@@ -142,9 +136,7 @@ subprogram_declaration:
 ;
 subprogram_head:
     function_t ident_t arguments ':' standard_type ';'
-
     | procedure_t ident_t arguments ';'
-    
 ;
 arguments:
     '(' parameter_list ')'
@@ -152,7 +144,6 @@ arguments:
 ;
 parameter_list:
     identifier_list ':' type
-
     | parameter_list ';' identifier_list ':' type
 ;
 compound_statement: 
@@ -171,11 +162,9 @@ statement_list:
 statement: 
     variable assign_op_t expression
     {
-        print_if_debug(*$1,"statement[0]->variable",ENABLEDP);
+        print_if_debug(to_string($1),"statement[0]->variable",ENABLEDP);
         print_if_debug(to_string($3),"statement[0]->expression",ENABLEDP);
-        auto src = memory.get($3);
-        auto dest = memory.get(*$1);
-        outfile<<asmfor_movassign(src,dest);
+        outfile<<asmfor_op2args(string("mov"),memory[$3],memory[$1]);
     }
     | procedure_statement
     | compound_statement
@@ -188,6 +177,10 @@ statement:
 ;
 variable:
     ident_t
+    {
+        print_if_debug(*$1,"variable[0]->ident_t",ENABLEDP);
+        $$ = memory.get(*$1)->mem_index;
+    }
     | ident_t '[' expression ']' // TODO: later.
 ;
 procedure_statement:
@@ -204,27 +197,26 @@ expression:
 ;
 simple_expression:
     term
+    {
+        $$ = $1;
+    }
     | sign_t term
     {
         print_if_debug("Negate","simple_expresson[1]",ENABLEDP);
     }
     | simple_expression sign_t term
     {
-        if ($2 == SIGN::PLUS){
-            Entry* result = memory.add_temp_var(STD_TYPES::INTEGER);
-            Entry *e1 = memory.get($1);
-            Entry *e2 = memory.get($3);
-            print_if_debug("Addition!","simple_expresson[2]",ENABLEDP);
-            outfile<<asmfor_add2memaddr(e1,e2,result);
-            $$=result->address;
+        if ($2 == SIGN::PLUS) {
+            // TODO: Ogarnij typy.
+            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
+            outfile<<asmfor_op3args(string("add"),memory[$1],memory[$3],tempvar);
+            $$ = tempvar->mem_index;
         }
-        if ($2 == SIGN::MINUS){
-            Entry* result = memory.add_temp_var(STD_TYPES::INTEGER);
-            Entry *e1 = memory.get($1);
-            Entry *e2 = memory.get($3);
-            print_if_debug("Subtraction!","simple_expresson[2]",ENABLEDP);
-            outfile<<asmfor_sub2memaddr(e1,e2,result);
-            $$=result->address;
+        if ($2 == SIGN::MINUS) {
+            // TODO: Ogarnij typy.
+            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
+            outfile<<asmfor_op3args(string("sub"),memory[$1],memory[$3],tempvar);
+            $$ = tempvar->mem_index;
         }
     }
     | simple_expression or_t term
@@ -236,22 +228,45 @@ term:
         $$=$1;
     }
     | term mulop_t factor
+    {
+        print_if_debug(to_string($1),"term[1]->term",ENABLEDP);
+        print_if_debug(string("Mulop: ")+enum2str($2),"retm[1]->mulop",ENABLEDP);
+        print_if_debug(to_string($3),"term[1]->factor",ENABLEDP);
+        if ($2 == MULOP::STAR){
+            // TODO: Ogarnij typy.
+            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
+            outfile<<asmfor_op3args(string("mul"),memory[$1],memory[$3],tempvar);
+            $$ = tempvar->mem_index;
+        }
+        if ($2 == MULOP::SLASH or $2 == MULOP::DIV){
+            // TODO: Ogarnij typy.
+            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
+            outfile<<asmfor_op3args(string("div"),memory[$1],memory[$3],tempvar);
+            $$ = tempvar->mem_index;
+        }
+    }
 ;
 factor: // Send memory adress up, not the bloody value.
     variable
+    {
+        print_if_debug(to_string($1),"factor[0]->variable",ENABLEDP);
+        $$ = $1;
+    }
     | ident_t '(' expression_list ')' // Function call
     | num_t // a number
     {
-        // Constant! Write the assembler to mov into memory! RETURN ADDRESS このバカの学生！.
+        // Constant! RETURN INDEX IN SYMTABLE このバカの学生！.
         Entry* e = new Entry();
         e->name_or_value=*$1;
         e->type = ENTRY_TYPES::CONST;
+        e->vartype = isInteger($1) ? STD_TYPES::INTEGER : STD_TYPES::REAL;
         int i=memory.add_entry(e);
-        memory.allocate(i);
-        outfile<<asmfor_movconst(e);
-        $$ = e->address;
+        $$ = i;
     }
     | '(' expression ')' // 'do this first'
+    {
+        $$ = $2;
+    }
     | not_t factor
 ;
 %%

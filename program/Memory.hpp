@@ -30,6 +30,7 @@ public:
 
     Entry *get(string id);
     Entry *get(int memaddr);
+    Entry* operator[](int index);
 
     fort::char_table dump();
 };

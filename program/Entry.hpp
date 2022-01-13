@@ -13,9 +13,9 @@ public:
     ENTRY_TYPES type;
     string name_or_value;
     int address = -1;
+    int mem_index = -1;
     STD_TYPES vartype = UNDEFINED;
 
-    Entry();
-    ~Entry();
+    string get_asm_var();
 };
 #endif

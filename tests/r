@@ -1,13 +1,12 @@
 #!/bin/bash
 
 make clean > /dev/null
-make
+make -j4
 INPUT=`find ./tests/files -xtype f -iname *.pas`
 for i in $INPUT; do
     echo '===================================================================================='
-    echo call: 
-    echo ./out $i
     echo compile with mine:
+    echo ./out $i
     ./out $i
     echo compile with komp:
     echo ./tests/komp $i ./tests/original.asm
@@ -22,6 +21,10 @@ for i in $INPUT; do
         echo original:
         echo $komp
         exit 1
+    else
+        echo $mine
+        echo $komp
+        echo NO DIFF
     fi
 
 done

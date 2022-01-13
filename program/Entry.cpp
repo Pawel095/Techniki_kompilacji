@@ -1,9 +1,10 @@
 #include "Entry.hpp"
 
-Entry::Entry()
+string Entry::get_asm_var()
 {
-}
-
-Entry::~Entry()
-{
+    if (this->type == ENTRY_TYPES::VAR)
+        return string(to_string(this->address));
+    else if (this->type == ENTRY_TYPES::CONST)
+        return string("#") + this->name_or_value;
+    return string("");
 }

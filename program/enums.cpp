@@ -32,3 +32,22 @@ std::string enum2str(STD_TYPES e)
         return std::string("UNKNOWN");
     }
 }
+std::string enum2str(MULOP e)
+{
+    switch (e)
+    {
+    case MULOP::STAR:
+        return std::string("STAR");
+    case MULOP::SLASH:
+        return std::string("SLASH");
+    case MULOP::DIV:
+        return std::string("DIV");
+    case MULOP::MOD:
+        return std::string("MOD");
+    case MULOP::AND:
+        return std::string("AND");
+
+    default:
+        return std::string("UNKNOWN");
+    }
+}

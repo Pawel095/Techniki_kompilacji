@@ -149,27 +149,27 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 
 "*" {
     print_if_debug(yytext,"mulop_t",ENABLEDL);
-    // TODO: nie ma zwracanego tekstu
+    yylval.mulop = MULOP::STAR;
     return mulop_t;
 }
 "/" {
     print_if_debug(yytext,"mulop_t",ENABLEDL);
-    // TODO: nie ma zwracanego tekstu
+    yylval.mulop = MULOP::SLASH;
     return mulop_t;
 }
 "div" {
     print_if_debug(yytext,"mulop_t",ENABLEDL);
-    // TODO: nie ma zwracanego tekstu
+    yylval.mulop = MULOP::DIV;
     return mulop_t;
 }
 "mod" {
     print_if_debug(yytext,"mulop_t",ENABLEDL);
-    // TODO: nie ma zwracanego tekstu
+    yylval.mulop = MULOP::MOD;
     return mulop_t;
 }
 "and" {
     print_if_debug(yytext,"mulop_t",ENABLEDL);
-    // TODO: nie ma zwracanego tekstu
+    yylval.mulop = MULOP::AND;
     return mulop_t;
 }
 "or" {
