@@ -46,4 +46,5 @@ enum ENTRY_TYPES
 std::string enum2str(ENTRY_TYPES e);
 std::string enum2str(STD_TYPES e);
 std::string enum2str(MULOP e);
+std::string enum2str(SIGN e);
 #endif // ENUMS_H

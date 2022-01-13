@@ -8,6 +8,11 @@ for i in $INPUT; do
     echo compile with mine:
     echo ./out $i
     ./out $i
+    code=$?
+    if [ $code -ne  0 ]; then
+        echo "Compiler died."
+        exit 1
+    fi
     echo compile with komp:
     echo ./tests/komp $i ./tests/original.asm
     ./tests/komp $i ./tests/original.asm

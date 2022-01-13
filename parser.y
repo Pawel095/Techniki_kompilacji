@@ -202,7 +202,21 @@ simple_expression:
     }
     | sign_t term
     {
-        print_if_debug("Negate","simple_expresson[1]",ENABLEDP);
+        print_if_debug(string(enum2str($1)),"simple_expresson[1]->sign",ENABLEDP);
+        $$ = $2;
+        if ($1 == SIGN::MINUS){
+            auto term = memory[$2];
+
+            auto temp = memory.add_temp_var(term->vartype);
+            
+            auto zero = Entry();
+            zero.type=ENTRY_TYPES::CONST;
+            zero.name_or_value=string("0");
+            zero.vartype=term->vartype;
+            
+            outfile<<asmfor_op3args(string("sub"),&zero,term,temp);
+            $$ = temp->mem_index;
+        }
     }
     | simple_expression sign_t term
     {

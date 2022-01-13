@@ -51,3 +51,16 @@ std::string enum2str(MULOP e)
         return std::string("UNKNOWN");
     }
 }
+std::string enum2str(SIGN e)
+{
+    switch (e)
+    {
+    case SIGN::PLUS:
+        return std::string("PLUS");
+    case SIGN::MINUS:
+        return std::string("MINUS");
+
+    default:
+        return std::string("UNKNOWN");
+    }
+}
