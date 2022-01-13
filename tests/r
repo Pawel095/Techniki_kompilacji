@@ -1,0 +1,30 @@
+#!/bin/bash
+
+make clean > /dev/null
+make
+INPUT=`find ./tests/files -xtype f -iname *.pas`
+for i in $INPUT; do
+    echo '===================================================================================='
+    echo call: 
+    echo ./out $i
+    echo compile with mine:
+    ./out $i
+    echo compile with komp:
+    echo ./tests/komp $i ./tests/original.asm
+    ./tests/komp $i ./tests/original.asm
+
+    mine=`./tests/vm ./output.asm`
+    komp=`./tests/vm ./tests/original.asm`
+    if [ "$mine" != "$komp" ]; then
+        echo ERROR IN TEST!
+        echo Mine:
+        echo $mine
+        echo original:
+        echo $komp
+        exit 1
+    fi
+
+done
+make clean
+make headers
+exit 0

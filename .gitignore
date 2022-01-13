@@ -4,6 +4,7 @@ bin64*
 parser.dot
 parser.output
 bin64/*
+tests/files/*
 lexer.cpp
 parser.hpp
 parser.cpp
