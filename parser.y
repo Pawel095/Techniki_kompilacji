@@ -258,6 +258,11 @@ term:
             outfile<<asmfor_op3args(string("div"),memory[$1],memory[$3],tempvar);
             $$ = tempvar->mem_index;
         }
+        if ($2 == MULOP::MOD){
+            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
+            outfile<<asmfor_op3args(string("mod"),memory[$1],memory[$3],tempvar);
+            $$ = tempvar->mem_index;
+        }
     }
 ;
 factor: // Send memory adress up, not the bloody value.
