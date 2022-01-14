@@ -169,14 +169,14 @@ statement:
         if (var->vartype != expr->vartype) {
             auto converted = memory.add_temp_var(var->vartype);
             if(var->vartype == STD_TYPES::INTEGER){
-                outfile<<asmfor_op2args(string("realtoint"),expr,converted);
+                outfile<<asmfor_op2args(string("realtoint"), expr, converted);
             }
             if (var->vartype == STD_TYPES::REAL) {
-                outfile<<asmfor_op2args(string("inttoreal"),expr,converted);
+                outfile<<asmfor_op2args(string("inttoreal"), expr, converted);
             }
-            outfile<<asmfor_op2args(string("mov"),converted,memory[$1]);
+            outfile<<asmfor_op2args(string("mov"), converted, memory[$1]);
         }else{
-            outfile<<asmfor_op2args(string("mov"),memory[$3],memory[$1]);
+            outfile<<asmfor_op2args(string("mov"), memory[$3], memory[$1]);
         }
     }
     | procedure_statement
@@ -194,7 +194,7 @@ variable:
         print_if_debug(*$1,"variable[0]->ident_t",ENABLEDP);
         $$ = memory.get(*$1)->mem_index;
     }
-    | ident_t '[' expression ']' // TODO: later.
+    | ident_t '[' expression ']' // TODO: array access
 ;
 procedure_statement:
     ident_t
@@ -225,7 +225,7 @@ simple_expression:
             zero.name_or_value=string("0");
             zero.vartype=term->vartype;
             
-            outfile<<asmfor_op3args(string("sub"),&zero,term,temp);
+            outfile<<asmfor_op3args(string("sub"), &zero, term, temp);
             $$ = temp->mem_index;
         }
     }
@@ -269,24 +269,35 @@ term:
     | term mulop_t factor
     {
         print_if_debug(to_string($1),"term[1]->term",ENABLEDP);
-        print_if_debug(string("Mulop: ")+enum2str($2),"retm[1]->mulop",ENABLEDP);
+        print_if_debug(string("Mulop: ")+enum2str($2),"term[1]->mulop",ENABLEDP);
         print_if_debug(to_string($3),"term[1]->factor",ENABLEDP);
+        
+        auto term = memory[$1];
+        auto factor = memory[$3];
+        // upgrade vars to real if needed
+        if (term->vartype != factor->vartype) {
+            auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
+            if (term->vartype != STD_TYPES::REAL) {
+                outfile<<asmfor_op2args(string("inttoreal"), term, upgraded);
+                term = upgraded;
+            }
+            if (factor->vartype != STD_TYPES::REAL) {
+                outfile<<asmfor_op2args(string("inttoreal"), factor, upgraded);
+                factor = upgraded;
+            }
+        }
+        // both real or both int.
+        auto tempvar = memory.add_temp_var(term->vartype);
         if ($2 == MULOP::STAR) {
-            // TODO: Ogarnij typy.
-            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
-            outfile<<asmfor_op3args(string("mul"),memory[$1],memory[$3],tempvar);
+            outfile<<asmfor_op3args(string("mul"), term, factor, tempvar);
             $$ = tempvar->mem_index;
         }
         if ($2 == MULOP::SLASH or $2 == MULOP::DIV) {
-            // TODO: Ogarnij typy.
-            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
-            outfile<<asmfor_op3args(string("div"),memory[$1],memory[$3],tempvar);
+            outfile<<asmfor_op3args(string("div"), term, factor, tempvar);
             $$ = tempvar->mem_index;
         }
         if ($2 == MULOP::MOD){
-            // TODO: Ogarnij typy.
-            auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
-            outfile<<asmfor_op3args(string("mod"),memory[$1],memory[$3],tempvar);
+            outfile<<asmfor_op3args(string("mod"), term, factor, tempvar);
             $$ = tempvar->mem_index;
         }
     }
@@ -294,7 +305,7 @@ term:
 factor: // Send memory adress up, not the bloody value.
     variable
     {
-        print_if_debug(to_string($1),"factor[0]->variable",ENABLEDP);
+        print_if_debug(to_string($1), "factor[0]->variable", ENABLEDP);
         $$ = $1;
     }
     | ident_t '(' expression_list ')' // Function call
