@@ -16,16 +16,18 @@ fort::char_table Memory::dump()
     out << fort::header << "ENTRY_TYPE"
         << "name_or_value"
         << "address"
+        << "mem_index"
         << "STD_TYPE" << fort::endr;
     for (auto e : this->table)
     {
-        out << enum2str(e->type) << e->name_or_value << e->address << enum2str(e->vartype) << fort::endr;
+        out << enum2str(e->type) << e->name_or_value << e->address << e->mem_index << enum2str(e->vartype) << fort::endr;
     }
     return out;
 }
 int Memory::add_entry(Entry *e)
 {
     size_t index = this->table.size();
+    e->mem_index = index;
     this->table.push_back(e);
     return index;
 }
@@ -37,11 +39,12 @@ Entry *Memory::add_temp_var(STD_TYPES type)
     e->name_or_value = string("$t") + to_string(this->temp_var_count);
     this->temp_var_count += 1;
     int i = this->add_entry(e);
+    e->mem_index = i;
     this->allocate(i);
 
     return e;
 }
-// ONLY FOR VARTYPE AND CONST
+// ONLY FOR VAR
 void Memory::allocate(int id)
 {
     auto e = this->table[id];
@@ -74,20 +77,6 @@ Entry *Memory::get(string id)
         auto a = this->table[i];
         if (a->name_or_value == id)
         {
-            a->mem_index = i;
-            return a;
-        }
-    }
-    return nullptr;
-}
-Entry *Memory::get(int memaddr)
-{
-    for (size_t i = 0; i < this->table.size(); i++)
-    {
-        auto a = this->table[i];
-        if (a->address == memaddr)
-        {
-            a->mem_index = i;
             return a;
         }
     }

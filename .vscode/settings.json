@@ -12,6 +12,15 @@
         "ostream": "cpp",
         "system_error": "cpp",
         "typeinfo": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "array": "cpp",
+        "functional": "cpp",
+        "memory": "cpp",
+        "tuple": "cpp",
+        "iomanip": "cpp",
+        "limits": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "utility": "cpp"
     }
 }
