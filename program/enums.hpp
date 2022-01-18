@@ -34,7 +34,7 @@ enum STD_TYPES
 enum SCOPE
 {
     GLOBAL,
-    FUNCTION
+    LOCAL
 };
 enum ENTRY_TYPES
 {

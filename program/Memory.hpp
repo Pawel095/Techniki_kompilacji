@@ -18,18 +18,23 @@ private:
     int address_pointer = 0;
     unsigned int temp_var_count = 0;
 
+    std::vector<std::vector<Entry *>> scope_stack;
+    int current_scope_index = -1;
+
+    std::vector<Entry *> current_scope();
+
 public:
     Memory();
     ~Memory();
-    // TODO: implement
     void set_scope(SCOPE scope);
+    void create_local_scope();
 
     int add_entry(Entry *e);
     Entry *add_temp_var(STD_TYPES type);
     void allocate(int id);
 
-    Entry *get(string id);
-    Entry* operator[](int index);
+    Entry *get(std::string id);
+    Entry *operator[](int index);
 
     fort::char_table dump();
 };

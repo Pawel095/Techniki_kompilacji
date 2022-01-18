@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/files/sum_int_real.pas"
+                "./tests/files/procedure.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

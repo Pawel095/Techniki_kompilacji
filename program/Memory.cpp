@@ -9,9 +9,10 @@ void Memory::set_scope(SCOPE scope)
 {
     this->scope = scope;
 }
+
 fort::char_table Memory::dump()
 {
-    cout << "MEMORY: " << endl;
+    std::cout << "MEMORY: " << std::endl;
     fort::char_table out;
     out << fort::header << "ENTRY_TYPE"
         << "name_or_value"
@@ -24,6 +25,17 @@ fort::char_table Memory::dump()
     }
     return out;
 }
+
+std::vector<Entry *> Memory::current_scope()
+{
+    return this->scope_stack[this->current_scope_index];
+}
+void Memory::create_local_scope()
+{
+    std::vector<Entry *> newscope;
+    this->scope_stack.push_back(newscope);
+}
+
 int Memory::add_entry(Entry *e)
 {
     size_t index = this->table.size();
@@ -31,12 +43,13 @@ int Memory::add_entry(Entry *e)
     this->table.push_back(e);
     return index;
 }
+
 Entry *Memory::add_temp_var(STD_TYPES type)
 {
     Entry *e = new Entry();
     e->type = ENTRY_TYPES::VAR;
     e->vartype = type;
-    e->name_or_value = string("$t") + to_string(this->temp_var_count);
+    e->name_or_value = std::string("$t") + std::to_string(this->temp_var_count);
     this->temp_var_count += 1;
     int i = this->add_entry(e);
     e->mem_index = i;
@@ -44,7 +57,7 @@ Entry *Memory::add_temp_var(STD_TYPES type)
 
     return e;
 }
-// ONLY FOR VAR
+
 void Memory::allocate(int id)
 {
     auto e = this->table[id];
@@ -70,7 +83,8 @@ void Memory::allocate(int id)
         return;
     }
 }
-Entry *Memory::get(string id)
+
+Entry *Memory::get(std::string id)
 {
     for (size_t i = 0; i < this->table.size(); i++)
     {
@@ -82,6 +96,7 @@ Entry *Memory::get(string id)
     }
     return nullptr;
 }
+
 Entry *Memory::operator[](int index)
 {
     return this->table[index];

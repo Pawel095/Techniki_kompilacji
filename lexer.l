@@ -7,7 +7,7 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 %{
     #include "global.hpp"
     #include "debug/printer.hpp"
-    bool ENABLEDL=false;
+    bool ENABLEDL=true;
 %}
 
 %%
@@ -186,13 +186,13 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 
 {NUM} {
     print_if_debug(yytext,"num_t",ENABLEDL);
-    yylval.str = new string(yytext);
+    yylval.str = new std::string(yytext);
     return num_t;
 }
 
 [[:alpha:]][[:alnum:]]* {
     print_if_debug(yytext,"ident_t",ENABLEDL);
-    yylval.str = new string(yytext);
+    yylval.str = new std::string(yytext);
     return ident_t;
 }
 . {

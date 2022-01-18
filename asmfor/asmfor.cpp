@@ -1,8 +1,8 @@
 #include "asmfor.hpp"
 
-std::string asmfor_op2args(string op, Entry *e1, Entry *e2)
+std::string asmfor_op2args(std::string op, Entry *e1, Entry *e2)
 {
-    string ret = string("");
+    std::string ret = std::string("");
     ret += op + "."; // mov.
     if (e1->vartype == STD_TYPES::INTEGER)
         ret += "i ";
@@ -15,9 +15,9 @@ std::string asmfor_op2args(string op, Entry *e1, Entry *e2)
     return ret;
 }
 
-std::string asmfor_write(vector<string *> ids)
+std::string asmfor_write(std::vector<std::string *> ids)
 {
-    string r = string("");
+    std::string r = std::string("");
     for (auto id : ids)
     {
         Entry *e = memory.get(*id);
@@ -27,16 +27,16 @@ std::string asmfor_write(vector<string *> ids)
         if (e->vartype == STD_TYPES::REAL)
             r += "r";
         r += " ";
-        r += to_string(e->address);
+        r += std::to_string(e->address);
         r += "\n";
     }
     return r;
 }
 
 // GENCODE!
-std::string asmfor_op3args(string op, Entry *e1, Entry *e2, Entry *e3)
+std::string asmfor_op3args(std::string op, Entry *e1, Entry *e2, Entry *e3)
 {
-    string ret = string("");
+    std::string ret = std::string("");
     ret += op + "."; // mov.
     if (e1->vartype == STD_TYPES::INTEGER)
         ret += "i ";

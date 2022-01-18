@@ -4,23 +4,23 @@
 void print_if_debug(const char *c, const char *prefix, bool enabled)
 {
     if (enabled)
-        cout << prefix << ": \'" << c << "\' " << endl;
+        std::cout << prefix << ": \'" << c << "\' " << std::endl;
 }
-void print_if_debug(string c, const char *prefix, bool enabled)
+void print_if_debug(std::string c, const char *prefix, bool enabled)
 {
     if (enabled)
     {
-        cout << prefix << ": \'" << c.c_str() << "\' " << endl;
+        std::cout << prefix << ": \'" << c.c_str() << "\' " << std::endl;
     }
 }
 
-void print_if_debug(const vector<string *> *strings, const char *prefix, bool enabled)
+void print_if_debug(const std::vector<std::string *> *strings, const char *prefix, bool enabled)
 {
     if (enabled)
     {
         for (auto str : *strings)
         {
-            cout << prefix << ": \'" << str->c_str() << "\'" << endl;
+            std::cout << prefix << ": \'" << str->c_str() << "\'" << std::endl;
         }
     }
 }

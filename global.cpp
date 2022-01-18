@@ -1,12 +1,12 @@
 #include "global.hpp"
 
-ofstream outfile;
+std::ofstream outfile;
 Memory memory = Memory();
 
 int yyerror(const char *a)
 {
-    std::cout << endl
-              << "In line " << yylineno << ": " << a << endl;
+    std::cout << std::endl
+              << "In line " << yylineno << ": " << a << std::endl;
     exit(1);
 }
 
@@ -19,9 +19,9 @@ void cleanup()
     outfile.close();
 }
 
-bool isInteger(const string *a)
+bool isInteger(const std::string *a)
 {
-    string::size_type dst, ist;
+    std::string::size_type dst, ist;
     std::stod(*a, &dst);
     std::stoi(*a, &ist);
     return dst == ist;

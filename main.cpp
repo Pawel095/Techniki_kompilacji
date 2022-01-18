@@ -20,6 +20,6 @@ int main(int argc, char const *argv[])
     init();
     yyparse();
     cleanup();
-    cout<<memory.dump().to_string()<<endl;
+    std::cout<<memory.dump().to_string()<<std::endl;
     return 0;
 }

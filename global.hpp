@@ -13,9 +13,7 @@
 #include "parser.hpp"
 
 
-using namespace std;
-
-extern ofstream outfile;
+extern std::ofstream outfile;
 extern Memory memory;
 
 int yyparse();
@@ -23,4 +21,4 @@ int yyerror(const char *a);
 
 void init();
 void cleanup();
-bool isInteger(const string *a);
+bool isInteger(const std::string *a);
