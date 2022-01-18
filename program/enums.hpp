@@ -41,7 +41,8 @@ enum ENTRY_TYPES
     VAR,
     CONST,
     FUNC,
-    PROCEDURE
+    PROCEDURE,
+    IGNORE
 };
 std::string enum2str(ENTRY_TYPES e);
 std::string enum2str(STD_TYPES e);

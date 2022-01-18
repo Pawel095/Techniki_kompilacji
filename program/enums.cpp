@@ -12,6 +12,8 @@ std::string enum2str(ENTRY_TYPES e)
         return std::string("PROCEDURE");
     case ENTRY_TYPES::FUNC:
         return std::string("FUNC");
+    case ENTRY_TYPES::IGNORE:
+        return std::string("IGNORE");
 
     default:
         return std::string("UNKNOWN");

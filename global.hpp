@@ -22,4 +22,4 @@ int yyerror(const char *a);
 
 void init();
 void cleanup();
-bool isInteger(const char *a);
+bool isInteger(std::string a);

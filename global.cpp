@@ -16,10 +16,12 @@ void init()
 }
 void cleanup()
 {
+    fclose(yyin);
+    yylex_destroy();
     outfile.close();
 }
 
-bool isInteger(const char *a)
+bool isInteger(std::string a)
 {
     std::string::size_type dst, ist;
     std::stod(a, &dst);

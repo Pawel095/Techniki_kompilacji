@@ -11,9 +11,8 @@
 }
 
 %union{
-    std::string* str;
-    std::vector<char*>* str_v;
-    int memaddr;
+    std::vector<int>* symtable_index_v;
+    int symtable_index;
     RELOP cmp;
     STD_TYPES std_type;
     SIGN sign;
@@ -32,8 +31,8 @@
 %token procedure_t
 %token array_range_t
 
-%token <str> ident_t
-%token <str> num_t
+%token <symtable_index> ident_t
+%token <symtable_index> num_t
 
 %token while_t
 %token do_t
@@ -55,21 +54,19 @@
 
 %type <std_type> standard_type
 %type <std_type> type
-%type <memaddr> factor
-%type <memaddr> term
-%type <memaddr> simple_expression
-%type <memaddr> expression
-%type <memaddr> variable
-%type <str_v> identifier_list
+%type <symtable_index> factor
+%type <symtable_index> term
+%type <symtable_index> simple_expression
+%type <symtable_index> expression
+%type <symtable_index> variable
+%type <symtable_index_v> identifier_list
 
 %%
 
 program:
     program_t ident_t '(' identifier_list ')' ';'
     {
-        char* name = (char* )$2->c_str();
-        delete $2;
-        std::string msg = std::string("nazwa programu: ") + std::string(name);
+        std::string msg = std::string("nazwa programu: ") + std::string(memory[$2].name_or_value);
         print_if_debug(msg,"program",ENABLEDP);
         outfile<<"jump.i #"<<ENTRYPOINT_NAME<<std::endl;
         delete $4;
@@ -92,31 +89,29 @@ program:
 identifier_list:
     ident_t
     {
-        char* name = (char* )$1->c_str();
-        // delete $1;
-        $$ = new std::vector<char*>();
-        $$->push_back(name);
-        print_if_debug(name,"identifier_list[0]->ident_t",ENABLEDP);
+        $$ = new std::vector<int>();
+        $$->push_back($1);
+        print_if_debug(memory[$1].name_or_value,"identifier_list[0]->ident_t",ENABLEDP);
     }
     | identifier_list ',' ident_t
     {
-        char* name = (char* )$3->c_str();
-        // delete $3;
-        $$->push_back(name);
-        print_if_debug(name,"identifier_list[1]->ident_t",ENABLEDP);
+        $$->push_back($3);
+        print_if_debug(memory[$3].name_or_value,"identifier_list[1]->ident_t",ENABLEDP);
     }
 ;
 declarations:
     declarations var_t identifier_list ':' type ';'
     {
-        for (auto id : *$3){
-            Entry e = Entry();
-            e.name_or_value = std::string(id);
-            e.type = ENTRY_TYPES::VAR;
-            e.vartype = $5;
-            int i=memory.add_entry(e);
-            memory.allocate(i);
+        for (auto index : *$3) 
+        {
+            auto entry = memory[index];
+            int a=1;
+            entry.type=ENTRY_TYPES::VAR;
+            entry.vartype=$5;
+            memory.update_entry(index,entry);
+            memory.allocate(index);
         }
+        delete $3;
     }
     | %empty
 ;
@@ -143,15 +138,7 @@ subprogram_declaration:
 ;
 subprogram_head:
     function_t ident_t arguments ':' standard_type ';'
-    {
-        char* name = (char* )$2->c_str();
-        delete $2;
-    }
     | procedure_t ident_t arguments ';'
-    {
-        char* name = (char* )$2->c_str();
-        delete $2;
-    }
 ;
 arguments:
     '(' parameter_list ')'
@@ -159,7 +146,13 @@ arguments:
 ;
 parameter_list:
     identifier_list ':' type
+    {
+        delete $1;
+    }
     | parameter_list ';' identifier_list ':' type
+    {
+        delete $3;
+    }
 ;
 compound_statement: 
     begin_t
@@ -202,34 +195,23 @@ statement:
     | write_t '(' identifier_list ')'
     {
         outfile<<asmfor_write(*$3);
+        delete $3;
     }
 ;
 variable:
     ident_t
     {
-        char* name = (char* )$1->c_str();
-        delete $1;
-        print_if_debug(name,"variable[0]->ident_t",ENABLEDP);
-        $$ = memory.get(name).mem_index;
-        print_if_debug(std::to_string(memory.get(name).mem_index),"variable[0]->ident_t->memindex",ENABLEDP);
+        print_if_debug(memory[$1].name_or_value,"variable[0]->ident_t",ENABLEDP);
+        $$ = $1;
+        print_if_debug(std::to_string($1),"variable[0]->ident_t->memindex",ENABLEDP);
     }
     | ident_t '[' expression ']' // TODO: array access
     {
-        char* name = (char* )$1->c_str();
-        delete $1;
     }
 ;
 procedure_statement:
     ident_t
-    {
-        char* name = (char* )$1->c_str();
-        delete $1;
-    }
     | ident_t '(' expression_list ')'
-    {
-        char* name = (char* )$1->c_str();
-        delete $1;
-    }
 ;
 expression_list:
     expression
@@ -342,15 +324,7 @@ factor: // Send memory adress up, not the bloody value.
     | ident_t '(' expression_list ')' // Function call
     | num_t // a number
     {
-        // Constant! RETURN INDEX IN SYMTABLE このバカの学生！.
-        char* name = (char* )$1->c_str();
-        delete $1;
-        Entry e = Entry();
-        e.name_or_value=std::string(name);
-        e.type = ENTRY_TYPES::CONST;
-        e.vartype = isInteger(name) ? STD_TYPES::INTEGER : STD_TYPES::REAL;
-        int i=memory.add_entry(e);
-        $$ = i;
+        $$ = $1;
     }
     | '(' expression ')' // 'do this first'
     {

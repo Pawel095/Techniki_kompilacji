@@ -15,12 +15,12 @@ std::string asmfor_op2args(std::string op, Entry e1, Entry e2)
     return ret;
 }
 
-std::string asmfor_write(std::vector<char *> ids)
+std::string asmfor_write(std::vector<int> ids)
 {
     std::string r = std::string("");
     for (auto id : ids)
     {
-        Entry e = memory.get(id);
+        Entry e = memory[id];
         r += "write.";
         if (e.vartype == STD_TYPES::INTEGER)
             r += "i";

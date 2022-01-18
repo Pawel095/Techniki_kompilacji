@@ -98,7 +98,7 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     return do_t;
 }
 
-":=" {
+"\:=" {
     print_if_debug(yytext,"assign_op_t",ENABLEDL);
     return assign_op_t;
 }
@@ -186,13 +186,34 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 
 {NUM} {
     print_if_debug(yytext,"num_t",ENABLEDL);
-    yylval.str = new std::string(yytext);
+    // Constant! RETURN INDEX IN SYMTABLE このバカの学生！.
+    std::string name = std::string(yytext);
+    if (!memory.exists(name)){
+        Entry e = Entry();
+        e.name_or_value=name;
+        e.type = ENTRY_TYPES::CONST;
+        e.vartype = isInteger(name) ? STD_TYPES::INTEGER : STD_TYPES::REAL;
+        int i=memory.add_entry(e);
+        yylval.symtable_index = i;
+    } else {
+        yylval.symtable_index = memory.get(name).mem_index;
+    }
     return num_t;
 }
 
 [[:alpha:]][[:alnum:]]* {
     print_if_debug(yytext,"ident_t",ENABLEDL);
-    yylval.str = new std::string(yytext);
+    std::string name= std::string(yytext);
+    
+    if (!memory.exists(name)){
+        Entry e = Entry();
+        e.name_or_value=name;
+        e.type = ENTRY_TYPES::IGNORE;
+        int i=memory.add_entry(e);
+        yylval.symtable_index = i;
+    } else {
+        yylval.symtable_index = memory.get(name).mem_index;
+    }
     return ident_t;
 }
 . {

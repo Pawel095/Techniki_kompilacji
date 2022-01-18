@@ -84,7 +84,22 @@ Entry Memory::get(std::string id)
             return a;
         }
     }
-    raise(SIGINT);
+}
+bool Memory::exists(std::string id)
+{
+    for (size_t i = 0; i < this->table.size(); i++)
+    {
+        auto a = this->table[i];
+        if (a.name_or_value == id)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+void Memory::update_entry(int index, Entry e)
+{
+    this->table[index] = e;
 }
 
 Entry Memory::operator[](int index)

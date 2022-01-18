@@ -2,6 +2,7 @@
 
 make clean > /dev/null
 make -j4
+valgrind='valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1'
 INPUT=`find ./tests/files -xtype f -iname *.pas`
 for i in $INPUT; do
     echo '===================================================================================='
@@ -11,6 +12,12 @@ for i in $INPUT; do
     code=$?
     if [ $code -ne  0 ]; then
         echo "Compiler died."
+        exit 1
+    fi
+    $valgrind ./out $i
+    code=$?
+    if [ $code -ne  0 ]; then
+        echo "Valgrind says there are leaks"
         exit 1
     fi
     echo compile with komp:

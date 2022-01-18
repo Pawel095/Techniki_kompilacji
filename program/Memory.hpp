@@ -28,7 +28,10 @@ public:
     void allocate(int id);
 
     Entry get(std::string id);
+    bool exists(std::string id);
+
     Entry operator[](int index);
+    void update_entry(int index, Entry e);
 
     fort::char_table dump();
 };

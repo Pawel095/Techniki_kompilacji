@@ -13,7 +13,6 @@ public:
     int address = -1;
     int mem_index = -1;
     STD_TYPES vartype = UNDEFINED;
-
     std::string get_asm_var();
 };
 #endif
