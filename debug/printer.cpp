@@ -14,13 +14,13 @@ void print_if_debug(std::string c, const char *prefix, bool enabled)
     }
 }
 
-void print_if_debug(const std::vector<std::string *> *strings, const char *prefix, bool enabled)
+void print_if_debug(const std::vector<char *> *strings, const char *prefix, bool enabled)
 {
     if (enabled)
     {
         for (auto str : *strings)
         {
-            std::cout << prefix << ": \'" << str->c_str() << "\'" << std::endl;
+            std::cout << prefix << ": \'" << str << "\'" << std::endl;
         }
     }
 }

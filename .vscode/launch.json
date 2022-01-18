@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/files/procedure.pas"
+                "./tests/files/negatives.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

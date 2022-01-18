@@ -12,7 +12,7 @@
 
 %union{
     std::string* str;
-    std::vector<std::string*>* str_v;
+    std::vector<char*>* str_v;
     int memaddr;
     RELOP cmp;
     STD_TYPES std_type;
@@ -54,23 +54,25 @@
 
 
 %type <std_type> standard_type
-%type <str_v> identifier_list
 %type <std_type> type
 %type <memaddr> factor
 %type <memaddr> term
 %type <memaddr> simple_expression
 %type <memaddr> expression
 %type <memaddr> variable
+%type <str_v> identifier_list
 
 %%
 
 program:
     program_t ident_t '(' identifier_list ')' ';'
     {
-        std::string msg = std::string("nazwa programu: ") + std::string(*$2);
+        char* name = (char* )$2->c_str();
+        delete $2;
+        std::string msg = std::string("nazwa programu: ") + std::string(name);
         print_if_debug(msg,"program",ENABLEDP);
-        print_if_debug($4,"program",ENABLEDP);
         outfile<<"jump.i #"<<ENTRYPOINT_NAME<<std::endl;
+        delete $4;
     }
     declarations 
     {
@@ -90,16 +92,18 @@ program:
 identifier_list:
     ident_t
     {
-        $$ = new std::vector<std::string* >();
-        $$->push_back($1);
+        char* name = (char* )$1->c_str();
+        delete $1;
+        $$ = new std::vector<char*>();
+        $$->push_back(name);
+        print_if_debug(name,"identifier_list[0]->ident_t",ENABLEDP);
     }
     | identifier_list ',' ident_t
     {
-        $$ = new std::vector<std::string* >();
-        for (auto ident : *$1){
-            $$->push_back(ident);
-        }
-        $$->push_back($3);
+        char* name = (char* )$3->c_str();
+        delete $3;
+        $$->push_back(name);
+        print_if_debug(name,"identifier_list[1]->ident_t",ENABLEDP);
     }
 
 ;
@@ -107,13 +111,14 @@ declarations:
     declarations var_t identifier_list ':' type ';'
     {
         for (auto id : *$3){
-            Entry* e = new Entry();
-            e->name_or_value=*id;
-            e->type = ENTRY_TYPES::VAR;
-            e->vartype = $5;
+            Entry e = Entry();
+            e.name_or_value = std::string(id);
+            e.type = ENTRY_TYPES::VAR;
+            e.vartype = $5;
             int i=memory.add_entry(e);
             memory.allocate(i);
         }
+        BREAKPOINT;
     }
     | %empty
 ;
@@ -140,9 +145,14 @@ subprogram_declaration:
 ;
 subprogram_head:
     function_t ident_t arguments ':' standard_type ';'
+    {
+        char* name = (char* )$2->c_str();
+        delete $2;
+    }
     | procedure_t ident_t arguments ';'
     {
-        memory.create_local_scope();
+        char* name = (char* )$2->c_str();
+        delete $2;
     }
 ;
 arguments:
@@ -173,12 +183,13 @@ statement:
         print_if_debug(std::to_string($3),"statement[0]->expression",ENABLEDP);
         auto var = memory[$1];
         auto expr = memory[$3];
-        if (var->vartype != expr->vartype) {
-            auto converted = memory.add_temp_var(var->vartype);
-            if(var->vartype == STD_TYPES::INTEGER){
+        // TODO: Sprawdź czy funkcja i wykonaj. rezultat przypisz.
+        if (var.vartype != expr.vartype) {
+            auto converted = memory.add_temp_var(var.vartype);
+            if(var.vartype == STD_TYPES::INTEGER){
                 outfile<<asmfor_op2args(std::string("realtoint"), expr, converted);
             }
-            if (var->vartype == STD_TYPES::REAL) {
+            if (var.vartype == STD_TYPES::REAL) {
                 outfile<<asmfor_op2args(std::string("inttoreal"), expr, converted);
             }
             outfile<<asmfor_op2args(std::string("mov"), converted, memory[$1]);
@@ -198,14 +209,28 @@ statement:
 variable:
     ident_t
     {
-        print_if_debug(*$1,"variable[0]->ident_t",ENABLEDP);
-        $$ = memory.get(*$1)->mem_index;
+        char* name = (char* )$1->c_str();
+        delete $1;
+        print_if_debug(name,"variable[0]->ident_t",ENABLEDP);
+        $$ = memory.get(name).mem_index;
     }
     | ident_t '[' expression ']' // TODO: array access
+    {
+        char* name = (char* )$1->c_str();
+        delete $1;
+    }
 ;
 procedure_statement:
     ident_t
+    {
+        char* name = (char* )$1->c_str();
+        delete $1;
+    }
     | ident_t '(' expression_list ')'
+    {
+        char* name = (char* )$1->c_str();
+        delete $1;
+    }
 ;
 expression_list:
     expression
@@ -226,14 +251,14 @@ simple_expression:
         $$ = $2;
         if ($1 == SIGN::MINUS){
             auto term = memory[$2];
-            auto temp = memory.add_temp_var(term->vartype);
+            auto temp = memory.add_temp_var(term.vartype);
             auto zero = Entry();
             zero.type=ENTRY_TYPES::CONST;
             zero.name_or_value=std::string("0");
-            zero.vartype=term->vartype;
+            zero.vartype=term.vartype;
             
-            outfile<<asmfor_op3args(std::string("sub"), &zero, term, temp);
-            $$ = temp->mem_index;
+            outfile<<asmfor_op3args(std::string("sub"), zero, term, temp);
+            $$ = temp.mem_index;
         }
     }
     | simple_expression sign_t term
@@ -241,28 +266,28 @@ simple_expression:
         auto expr = memory[$1];
         auto term = memory[$3];
         // upgrade vars to real if needed
-        if (expr->vartype != term->vartype) {
+        if (expr.vartype != term.vartype) {
             auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
-            if (expr->vartype != STD_TYPES::REAL) {
+            if (expr.vartype != STD_TYPES::REAL) {
                 outfile<<asmfor_op2args(std::string("inttoreal"), expr, upgraded);
                 expr = upgraded;
             }
-            if (term->vartype != STD_TYPES::REAL) {
+            if (term.vartype != STD_TYPES::REAL) {
                 outfile<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
                 term = upgraded;
             }
         }
         // all vars have the same type here.
         if ($2 == SIGN::PLUS) {
-            auto tempvar = memory.add_temp_var(expr->vartype);
+            auto tempvar = memory.add_temp_var(expr.vartype);
             outfile<<asmfor_op3args(std::string("add"), expr, term, tempvar);
-            $$ = tempvar->mem_index;
+            $$ = tempvar.mem_index;
         }
 
         if ($2 == SIGN::MINUS) {
-            auto tempvar = memory.add_temp_var(expr->vartype);
+            auto tempvar = memory.add_temp_var(expr.vartype);
             outfile<<asmfor_op3args(std::string("sub"), expr, term, tempvar);
-            $$ = tempvar->mem_index;
+            $$ = tempvar.mem_index;
         }
     }
     | simple_expression or_t term
@@ -282,30 +307,30 @@ term:
         auto term = memory[$1];
         auto factor = memory[$3];
         // upgrade vars to real if needed
-        if (term->vartype != factor->vartype) {
+        if (term.vartype != factor.vartype) {
             auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
-            if (term->vartype != STD_TYPES::REAL) {
+            if (term.vartype != STD_TYPES::REAL) {
                 outfile<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
                 term = upgraded;
             }
-            if (factor->vartype != STD_TYPES::REAL) {
+            if (factor.vartype != STD_TYPES::REAL) {
                 outfile<<asmfor_op2args(std::string("inttoreal"), factor, upgraded);
                 factor = upgraded;
             }
         }
         // both real or both int.
-        auto tempvar = memory.add_temp_var(term->vartype);
+        auto tempvar = memory.add_temp_var(term.vartype);
         if ($2 == MULOP::STAR) {
             outfile<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
-            $$ = tempvar->mem_index;
+            $$ = tempvar.mem_index;
         }
         if ($2 == MULOP::SLASH or $2 == MULOP::DIV) {
             outfile<<asmfor_op3args(std::string("div"), term, factor, tempvar);
-            $$ = tempvar->mem_index;
+            $$ = tempvar.mem_index;
         }
         if ($2 == MULOP::MOD){
             outfile<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
-            $$ = tempvar->mem_index;
+            $$ = tempvar.mem_index;
         }
     }
 ;
@@ -319,10 +344,12 @@ factor: // Send memory adress up, not the bloody value.
     | num_t // a number
     {
         // Constant! RETURN INDEX IN SYMTABLE このバカの学生！.
-        Entry* e = new Entry();
-        e->name_or_value=*$1;
-        e->type = ENTRY_TYPES::CONST;
-        e->vartype = isInteger($1) ? STD_TYPES::INTEGER : STD_TYPES::REAL;
+        char* name = (char* )$1->c_str();
+        delete $1;
+        Entry e = Entry();
+        e.name_or_value=std::string(name);
+        e.type = ENTRY_TYPES::CONST;
+        e.vartype = isInteger(name) ? STD_TYPES::INTEGER : STD_TYPES::REAL;
         int i=memory.add_entry(e);
         $$ = i;
     }

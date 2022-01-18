@@ -19,10 +19,10 @@ void cleanup()
     outfile.close();
 }
 
-bool isInteger(const std::string *a)
+bool isInteger(const char *a)
 {
     std::string::size_type dst, ist;
-    std::stod(*a, &dst);
-    std::stoi(*a, &ist);
+    std::stod(a, &dst);
+    std::stoi(a, &ist);
     return dst == ist;
 }

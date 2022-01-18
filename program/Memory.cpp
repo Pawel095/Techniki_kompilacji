@@ -21,38 +21,28 @@ fort::char_table Memory::dump()
         << "STD_TYPE" << fort::endr;
     for (auto e : this->table)
     {
-        out << enum2str(e->type) << e->name_or_value << e->address << e->mem_index << enum2str(e->vartype) << fort::endr;
+        out << enum2str(e.type) << e.name_or_value << e.address << e.mem_index << enum2str(e.vartype) << fort::endr;
     }
     return out;
 }
 
-std::vector<Entry *> Memory::current_scope()
-{
-    return this->scope_stack[this->current_scope_index];
-}
-void Memory::create_local_scope()
-{
-    std::vector<Entry *> newscope;
-    this->scope_stack.push_back(newscope);
-}
-
-int Memory::add_entry(Entry *e)
+int Memory::add_entry(Entry e)
 {
     size_t index = this->table.size();
-    e->mem_index = index;
+    e.mem_index = index;
     this->table.push_back(e);
     return index;
 }
 
-Entry *Memory::add_temp_var(STD_TYPES type)
+Entry Memory::add_temp_var(STD_TYPES type)
 {
-    Entry *e = new Entry();
-    e->type = ENTRY_TYPES::VAR;
-    e->vartype = type;
-    e->name_or_value = std::string("$t") + std::to_string(this->temp_var_count);
+    Entry e = Entry();
+    e.type = ENTRY_TYPES::VAR;
+    e.vartype = type;
+    e.name_or_value = std::string("$t") + std::to_string(this->temp_var_count);
     this->temp_var_count += 1;
     int i = this->add_entry(e);
-    e->mem_index = i;
+    e.mem_index = i;
     this->allocate(i);
 
     return e;
@@ -61,17 +51,17 @@ Entry *Memory::add_temp_var(STD_TYPES type)
 void Memory::allocate(int id)
 {
     auto e = this->table[id];
-    e->mem_index = id;
-    if (e->type == ENTRY_TYPES::VAR)
+    e.mem_index = id;
+    if (e.type == ENTRY_TYPES::VAR)
     {
-        switch (e->vartype)
+        switch (e.vartype)
         {
         case STD_TYPES::INTEGER:
-            e->address = this->address_pointer;
+            e.address = this->address_pointer;
             this->address_pointer += 4;
             break;
         case STD_TYPES::REAL:
-            e->address = this->address_pointer;
+            e.address = this->address_pointer;
             this->address_pointer += 8;
             break;
         }
@@ -84,20 +74,20 @@ void Memory::allocate(int id)
     }
 }
 
-Entry *Memory::get(std::string id)
+Entry Memory::get(std::string id)
 {
     for (size_t i = 0; i < this->table.size(); i++)
     {
         auto a = this->table[i];
-        if (a->name_or_value == id)
+        if (a.name_or_value == id)
         {
             return a;
         }
     }
-    return nullptr;
+    raise(SIGINT);
 }
 
-Entry *Memory::operator[](int index)
+Entry Memory::operator[](int index)
 {
     return this->table[index];
 }

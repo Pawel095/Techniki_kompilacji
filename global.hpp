@@ -5,6 +5,7 @@
 #include <csignal>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "program/enums.hpp"
 #include "program/Memory.hpp"
@@ -21,4 +22,4 @@ int yyerror(const char *a);
 
 void init();
 void cleanup();
-bool isInteger(const std::string *a);
+bool isInteger(const char *a);

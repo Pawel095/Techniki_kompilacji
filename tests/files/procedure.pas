@@ -13,7 +13,7 @@ begin
     i:=4;
     j:=4;
     g:=2 mod 3;
-    h=f;
+    f;
     write(g);
-    write(h);
+    write(h)
 end.

@@ -12,4 +12,7 @@ lab0:
         mov.i   #4,12                   ;mov.i   4,j
         mod.i   #2,#3,16                ;mod.i   2,3,$t2
         mov.i   16,0                    ;mov.i   $t2,g
-        call.i  #4                      ;call.i  &h
+        call.i  #f                      ;call.i  &f
+        write.i 0                       ;write.i g
+        write.i 4                       ;write.i h
+        exit                            ;exit    
