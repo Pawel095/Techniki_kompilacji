@@ -93,7 +93,7 @@ identifier_list:
     ident_t
     {
         char* name = (char* )$1->c_str();
-        delete $1;
+        // delete $1;
         $$ = new std::vector<char*>();
         $$->push_back(name);
         print_if_debug(name,"identifier_list[0]->ident_t",ENABLEDP);
@@ -101,11 +101,10 @@ identifier_list:
     | identifier_list ',' ident_t
     {
         char* name = (char* )$3->c_str();
-        delete $3;
+        // delete $3;
         $$->push_back(name);
         print_if_debug(name,"identifier_list[1]->ident_t",ENABLEDP);
     }
-
 ;
 declarations:
     declarations var_t identifier_list ':' type ';'
@@ -118,7 +117,6 @@ declarations:
             int i=memory.add_entry(e);
             memory.allocate(i);
         }
-        BREAKPOINT;
     }
     | %empty
 ;
@@ -213,6 +211,7 @@ variable:
         delete $1;
         print_if_debug(name,"variable[0]->ident_t",ENABLEDP);
         $$ = memory.get(name).mem_index;
+        print_if_debug(std::to_string(memory.get(name).mem_index),"variable[0]->ident_t->memindex",ENABLEDP);
     }
     | ident_t '[' expression ']' // TODO: array access
     {

@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/files/negatives.pas"
+                "./tests/files/add_sub_assign_write.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

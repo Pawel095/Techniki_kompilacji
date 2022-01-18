@@ -45,23 +45,23 @@ Entry Memory::add_temp_var(STD_TYPES type)
     e.mem_index = i;
     this->allocate(i);
 
-    return e;
+    return this->table[i];
 }
 
 void Memory::allocate(int id)
 {
-    auto e = this->table[id];
-    e.mem_index = id;
-    if (e.type == ENTRY_TYPES::VAR)
+    auto e = &(this->table[id]);
+    e->mem_index = id;
+    if (e->type == ENTRY_TYPES::VAR)
     {
-        switch (e.vartype)
+        switch (e->vartype)
         {
         case STD_TYPES::INTEGER:
-            e.address = this->address_pointer;
+            e->address = this->address_pointer;
             this->address_pointer += 4;
             break;
         case STD_TYPES::REAL:
-            e.address = this->address_pointer;
+            e->address = this->address_pointer;
             this->address_pointer += 8;
             break;
         }
