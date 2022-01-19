@@ -145,7 +145,9 @@ subprogram_declaration:
     {
         std::cout<<memory.dump().c_str()<<std::endl;
         // TODO: drop temp variables
-        // TODO: leave,return.
+        outfile<<"leave"<<std::endl<<"return"<<std::endl;
+        memory.reset_scope();
+        print_if_debug("Scope reset","subprogram_declaration",ENABLEDP);
     }
 ;
 subprogram_head:
@@ -157,8 +159,6 @@ subprogram_head:
     | procedure_t ident_t arguments ';'
     {
         // TODO: add label here
-        memory.reset_scope();
-        print_if_debug("Scope reset","subprogram_head[1]",ENABLEDP);
         memory.initial_bp(false);
         auto func = memory[$2];
         func.type=ENTRY_TYPES::PROCEDURE;

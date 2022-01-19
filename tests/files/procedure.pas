@@ -9,6 +9,13 @@ begin
     write(g)
 end;
 
+procedure proc2(b,c:integer);
+var g:real;
+begin
+    g:=b-c;
+    write(g)
+end;
+
 begin
     i:=4;
     j:=4;

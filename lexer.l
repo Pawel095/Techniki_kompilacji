@@ -206,12 +206,14 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     std::string name= std::string(yytext);
     
     if (!memory.exists(name)){
+        print_if_debug(std::string(yytext)+" Does not exist. creating","ident_t",ENABLEDL);
         Entry e = Entry();
         e.name_or_value=name;
         int i=memory.add_entry(e);
         yylval.symtable_index = i;
     } else {
         yylval.symtable_index = memory.get(name).mem_index;
+        print_if_debug(std::string(yytext)+" is in the table, id: "+ std::to_string(memory.get(name).mem_index),"ident_t",ENABLEDL);
     }
     return ident_t;
 }

@@ -24,15 +24,27 @@ void Memory::reset_scope()
 {
     this->bp_up = 0;
     this->bp_dn = 0;
+    std::vector<int> ids_to_delete = std::vector<int>();
     for (Entry e : this->table)
     {
         if (is_local_val(e))
-        {
-            this->table.erase(this->table.begin() + e.mem_index);
-        }
+            ids_to_delete.push_back(e.mem_index);
     }
-}
 
+    auto revit = ids_to_delete.rbegin();
+    for (; revit != ids_to_delete.rend(); revit++)
+    {
+        this->table.erase(this->table.begin() + *revit);
+    }
+    int b=1;
+    // reindex after reset.
+    for (size_t i = 0; i < this->table.size(); i++)
+    {
+        auto e = &(this->table[i]);
+        e->mem_index = i;
+    }
+    int a=1;
+}
 void Memory::initial_bp(bool has_return_var)
 {
     if (has_return_var)
