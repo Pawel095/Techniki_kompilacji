@@ -2,6 +2,7 @@
 #define ENTRY_H
 
 #include <string>
+#include <vector>
 #include "enums.hpp"
 
 class Entry
@@ -13,6 +14,8 @@ public:
     int address = -1;
     int mem_index = -1;
     STD_TYPES vartype = STD_TYPES::UNDEFINED;
+    std::vector<STD_TYPES> arg_types;
     std::string get_asm_var();
+    std::string get_asm_ptr();
 };
 #endif

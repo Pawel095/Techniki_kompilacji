@@ -1,26 +1,27 @@
 program proc(inp,out);
-var g,h,i,j:integer;
+var g,i,j:integer;
 
 
 procedure f(b:integer;c:real);
 var g:real;
 begin
     g:=b-c*b;
-    write(g)
+    write(b);
+    write(c)
 end;
 
-procedure proc2(b,c:integer);
+procedure proc2(a:integer;b:real);
 var g:real;
 begin
-    g:=b-c;
+    g:=a+b;
     write(g)
 end;
 
 begin
-    i:=4;
-    j:=4;
+    i:=1;
+    j:=2;
     g:=2 mod 3;
-    f(i,j);
-    write(g);
-    write(h)
+    f(i,j+g);
+    proc2(1,3);
+    write(g)
 end.

@@ -135,15 +135,8 @@ void Memory::allocate(int id)
     else if (e->type == ENTRY_TYPES::ARGUMENT)
     {
         e->address = this->bp_up;
-        switch (e->vartype)
-        {
-        case STD_TYPES::INTEGER:
-            this->bp_up += 4;
-            break;
-        case STD_TYPES::REAL:
-            this->bp_up += 8;
-            break;
-        }
+        // Arguments are pointers. code autor === idiot.
+        this->bp_up += 4;
     }
     else
     {

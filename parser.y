@@ -1,5 +1,6 @@
 %{
     #define YYERROR_VERBOSE 1
+    // REMLAT: disable debug
     bool ENABLEDP=true;
     const char* ENTRYPOINT_NAME = "entrypoint";
 %}
@@ -58,6 +59,7 @@
 %type <symtable_index> term
 %type <symtable_index> simple_expression
 %type <symtable_index> expression
+%type <symtable_index_v> expression_list
 %type <symtable_index> variable
 %type <symtable_index_v> identifier_list
 %type <symtable_index_v> parameter_list
@@ -167,14 +169,18 @@ subprogram_head:
         memory.initial_bp(false);
         auto func = memory[$2];
         func.type=ENTRY_TYPES::PROCEDURE;
-        memory.update_entry($2,func);
-        // add args to symtable
-        for (auto id:*$3){
+        // add args to symtable, update func argtypes.
+        while (! $3->empty()){
+            int id = $3->back();
+            $3->pop_back();
             auto arg = memory[id];
+
+            func.arg_types.insert(func.arg_types.begin(),arg.vartype);
             arg.type = ENTRY_TYPES::ARGUMENT;
             memory.update_entry(id,arg);
             memory.allocate(id);
         }
+        memory.update_entry($2,func);
         delete $3;
         $$ = $2;
     }
@@ -232,7 +238,6 @@ statement:
         print_if_debug(std::to_string($3),"statement[0]->expression",ENABLEDP);
         auto var = memory[$1];
         auto expr = memory[$3];
-        // TODO: Sprawdź czy funkcja i wykonaj. rezultat przypisz.
         if (var.vartype != expr.vartype) {
             auto converted = memory.add_temp_var(var.vartype);
             if(var.vartype == STD_TYPES::INTEGER){
@@ -269,14 +274,66 @@ variable:
 ;
 procedure_statement:
     ident_t
+    {
+        // standalone call without arguments
+        // func;
+        print_if_debug(memory[$1].name_or_value,"procedure_statement[0]->ident_t",ENABLEDP);
+        memory<<std::string("call.i #")+memory[$1].name_or_value+"\n";
+    }
     | ident_t '(' expression_list ')'
+    {
+        // standalone call with arguments
+        // func(a,2);
+        print_if_debug(memory[$1].name_or_value,"procedure_statement[1]->ident_t",ENABLEDP);
+        print_if_debug(*$3,"procedure_statement[1]->expression_list",ENABLEDP);
+        auto func = memory[$1];
+        for(size_t i=0;i< $3->size();i++) {
+            int id = $3->at(i);
+            STD_TYPES funcargtype = func.arg_types[i];
+            Entry arg = memory[id];
+
+            // convert first, then check if const.
+            if (arg.vartype!=funcargtype) {
+                Entry temp = memory.add_temp_var(funcargtype);
+                if (funcargtype == STD_TYPES::REAL)
+                    memory<<asmfor_op2args(std::string("inttoreal"), arg, temp);
+                if (funcargtype == STD_TYPES::INTEGER)
+                    memory<<asmfor_op2args(std::string("realtoint"), arg, temp);
+                arg = temp;
+            }
+
+            if (arg.type==ENTRY_TYPES::CONST){
+                Entry temp = memory.add_temp_var(arg.vartype);
+                memory<<asmfor_op2args(std::string("mov"), arg, temp);
+                arg = temp;
+            }
+            
+            if (arg.type == ENTRY_TYPES::VAR || arg.type == ENTRY_TYPES::LOCAL_VAR || arg.type == ENTRY_TYPES::ARGUMENT){
+                memory<<std::string("push.i ") + arg.get_asm_ptr()+"\n";
+            }else{
+                BREAKPOINT;
+            }
+        }
+        memory<<std::string("call.i #") + func.name_or_value+"\n";
+        memory<<std::string("incsp.i #") + std::to_string($3->size() * 4) +"\n";
+        delete $3;
+    }
 ;
 expression_list:
     expression
-    | expression_list ',' expression
+    {
+        $$ = new std::vector<int>();
+        $$->push_back($1);
+    }
+    | expression_list ',' expression {
+        $$->push_back($3);
+    }
 ;
 expression:
     simple_expression
+    {
+        $$=$1;
+    }
     | simple_expression relop_t simple_expression
 ;
 simple_expression:
@@ -379,7 +436,9 @@ factor: // Send memory adress up, not the bloody value.
         print_if_debug(std::to_string($1), "factor[0]->variable", ENABLEDP);
         $$ = $1;
     }
-    | ident_t '(' expression_list ')' // Function call
+    | ident_t '(' expression_list ')' // Function call with assign later.
+    {
+    }
     | num_t // a number
     {
         $$ = $1;
