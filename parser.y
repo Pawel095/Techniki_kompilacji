@@ -179,6 +179,7 @@ subprogram_head:
             memory.allocate(id);
         }
         memory.update_entry($2,func);
+        memory.current_function = func;
         // add return value to symtable
         delete $3;
         $$ = $2;
@@ -285,8 +286,22 @@ variable:
     ident_t
     {
         print_if_debug(memory[$1].name_or_value,"variable[0]->ident_t",ENABLEDP);
-        $$ = $1;
-        print_if_debug(std::to_string($1),"variable[0]->ident_t->memindex",ENABLEDP);
+        auto ident = memory[$1];
+        if (ident.type==ENTRY_TYPES::FUNC){
+            if (memory.get_scope() == SCOPE::LOCAL &&memory.current_function.name_or_value == ident.name_or_value){
+                print_if_debug(memory[$1].name_or_value + " is actually a return statement.","variable[0]->ident_t",ENABLEDP);    
+            }else{
+                print_if_debug(memory[$1].name_or_value + " is actually a function. execute, pass result up.","variable[0]->ident_t",ENABLEDP);
+                auto temp = memory.add_temp_var(ident.vartype);
+                memory<<std::string("push.i ") + temp.get_asm_ptr()+"\n";
+                memory<<std::string("call.i #")+memory[$1].name_or_value+"\n";
+                memory<<std::string("incsp.i #4\n");
+                $$ = temp.mem_index;
+            }
+        }else{
+            // var or const.
+            $$ = $1;
+        }
     }
     | ident_t '[' expression ']' // TODO: array access
     {
@@ -458,7 +473,49 @@ factor: // Send memory adress up, not the bloody value.
     }
     | ident_t '(' expression_list ')' // Function call with assign later.
     {
-        std::cout<<"ASSIGNOP FUNCTION CALL"<<std::endl;
+        // assign call with arguments
+        // func(a,2);
+        print_if_debug(memory[$1].name_or_value,"factor[1]->ident_t",ENABLEDP);
+        print_if_debug(*$3,"factor[1]->expression_list",ENABLEDP);
+        auto func = memory[$1];
+        if (func.type!=ENTRY_TYPES::FUNC){
+            // TODO: some error message?
+            BREAKPOINT;
+        }
+
+        for(size_t i=0;i< $3->size();i++) {
+            int id = $3->at(i);
+            STD_TYPES funcargtype = func.arg_types[i];
+            Entry arg = memory[id];
+
+            // convert first, then check if const.
+            if (arg.vartype!=funcargtype) {
+                Entry temp = memory.add_temp_var(funcargtype);
+                if (funcargtype == STD_TYPES::REAL)
+                    memory<<asmfor_op2args(std::string("inttoreal"), arg, temp);
+                if (funcargtype == STD_TYPES::INTEGER)
+                    memory<<asmfor_op2args(std::string("realtoint"), arg, temp);
+                arg = temp;
+            }
+
+            if (arg.type==ENTRY_TYPES::CONST){
+                Entry temp = memory.add_temp_var(arg.vartype);
+                memory<<asmfor_op2args(std::string("mov"), arg, temp);
+                arg = temp;
+            }
+            
+            if (arg.type == ENTRY_TYPES::VAR || arg.type == ENTRY_TYPES::LOCAL_VAR || arg.type == ENTRY_TYPES::ARGUMENT){
+                memory<<std::string("push.i ") + arg.get_asm_ptr()+"\n";
+            }else{
+                BREAKPOINT;
+            }
+        }
+        auto return_value = memory.add_temp_var(func.vartype);
+        memory<<std::string("push.i #") + std::to_string(return_value.address)+"\n";
+        memory<<std::string("call.i #") + func.name_or_value+"\n";
+        memory<<std::string("incsp.i #") + std::to_string($3->size() * 4) +"\n";
+        delete $3;
+        $$ = return_value.mem_index;
     }
     | num_t // a number
     {

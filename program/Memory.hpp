@@ -24,6 +24,8 @@ private:
     int bp_dn = 0;
 
 public:
+    Entry current_function;
+
     Memory();
     ~Memory();
     void set_scope(SCOPE scope);

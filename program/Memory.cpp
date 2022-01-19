@@ -25,6 +25,7 @@ void Memory::reset_scope()
     this->bp_up = 0;
     this->bp_dn = 0;
     this->func_buffer = std::stringstream("");
+    this->current_function = Entry();
 
     std::vector<int> ids_to_delete = std::vector<int>();
     for (Entry e : this->table)
@@ -86,7 +87,6 @@ int Memory::add_entry(Entry e)
 
 Entry Memory::add_temp_var(STD_TYPES type)
 {
-
     Entry e = Entry();
     if (this->scope == SCOPE::LOCAL)
         e.type = ENTRY_TYPES::LOCAL_VAR;
