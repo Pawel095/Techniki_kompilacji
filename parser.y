@@ -160,8 +160,28 @@ subprogram_declaration:
 subprogram_head:
     function_t ident_t arguments ':' standard_type ';'
     {
-        std::cout<<"Func "<<memory[$2].name_or_value<<std::endl;
+        memory.initial_bp(false);
+        auto func = memory[$2];
+        func.type=ENTRY_TYPES::FUNC;
+        func.vartype=$5;
+        memory.update_entry($2,func);
+        memory.allocate($2);
+        func = memory[$2];
+        // add args to symtable, update func argtypes.
+        while (! $3->empty()){
+            int id = $3->back();
+            $3->pop_back();
+            auto arg = memory[id];
+
+            func.arg_types.insert(func.arg_types.begin(),arg.vartype);
+            arg.type = ENTRY_TYPES::ARGUMENT;
+            memory.update_entry(id,arg);
+            memory.allocate(id);
+        }
+        memory.update_entry($2,func);
+        // add return value to symtable
         delete $3;
+        $$ = $2;
     }
     | procedure_t ident_t arguments ';'
     {
@@ -438,6 +458,7 @@ factor: // Send memory adress up, not the bloody value.
     }
     | ident_t '(' expression_list ')' // Function call with assign later.
     {
+        std::cout<<"ASSIGNOP FUNCTION CALL"<<std::endl;
     }
     | num_t // a number
     {

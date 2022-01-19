@@ -138,6 +138,11 @@ void Memory::allocate(int id)
         // Arguments are pointers. code autor === idiot.
         this->bp_up += 4;
     }
+    else if (e->type == ENTRY_TYPES::FUNC)
+    {
+        e->address = this->bp_up;
+        this->bp_up += 4;
+    }
     else
     {
         // Capture all not variables and skip if not debugging.
@@ -170,30 +175,24 @@ Entry Memory::get(std::string id)
 }
 bool Memory::exists(std::string id)
 {
-    if (this->scope == SCOPE::GLOBAL)
+    // Search local scope first, then global.
+    for (auto a : this->table)
     {
-        for (size_t i = 0; i < this->table.size(); i++)
+        if (is_local_val(a) && a.name_or_value == id)
         {
-            auto a = this->table[i];
-            if (a.name_or_value == id)
-            {
-                return true;
-            }
+            return true;
         }
-        return false;
     }
-    else
+
+    for (size_t i = 0; i < this->table.size(); i++)
     {
-        //Search local scope
-        for (auto a : this->table)
+        auto a = this->table[i];
+        if (a.name_or_value == id)
         {
-            if (is_local_val(a) && a.name_or_value == id)
-            {
-                return true;
-            }
+            return true;
         }
-        return false;
     }
+    return false;
 }
 void Memory::update_entry(int index, Entry e)
 {
