@@ -6,18 +6,12 @@ valgrind='valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1'
 INPUT=`find ./tests/files -xtype f -iname *.pas`
 for i in $INPUT; do
     echo '===================================================================================='
-    echo compile with mine:
-    echo ./out $i
-    ./out $i
-    code=$?
-    if [ $code -ne  0 ]; then
-        echo "Compiler died."
-        exit 1
-    fi
+    echo compile with mine + valgrind:
+    echo $valgrind ./out $i
     $valgrind ./out $i
     code=$?
     if [ $code -ne  0 ]; then
-        echo "Valgrind says there are leaks"
+        echo "Valgrind says there are leaks or compiler died."
         exit 1
     fi
     echo compile with komp:
