@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include "enums.hpp"
 #include "Entry.hpp"
@@ -16,10 +17,11 @@ private:
     std::vector<Entry> table;
     int address_pointer = 0;
     unsigned int temp_var_count = 0;
+    std::stringstream func_buffer;
 
     SCOPE scope;
-    int bp_up=0;
-    int bp_dn=0;
+    int bp_up = 0;
+    int bp_dn = 0;
 
 public:
     Memory();
@@ -27,6 +29,8 @@ public:
     void set_scope(SCOPE scope);
     SCOPE get_scope();
     void reset_scope();
+    std::string func_body();
+    int local_temp_bytes();
 
     void initial_bp(bool has_return_var);
 
@@ -37,9 +41,11 @@ public:
     Entry get(std::string id);
     bool exists(std::string id);
 
-    Entry operator[](int index);
     void update_entry(int index, Entry e);
 
     fort::char_table dump();
+
+    Entry operator[](int index);
+    void operator<<(std::string);
 };
 #endif

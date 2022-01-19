@@ -2,7 +2,7 @@ VPATH = .:./program:./debug:./libfort/lib:./asmfor
 
 flex = flex
 compiler = g++
-cflags = -g
+cflags = -g --std=c++2a
 libraries =
 bison = bison
 bflags = -g --verbose --debug

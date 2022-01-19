@@ -2,10 +2,10 @@ program proc(inp,out);
 var g,h,i,j:integer;
 
 
-procedure f(b,c:integer);
+procedure f(b:integer;c:real);
 var g:real;
 begin
-    g:=b-c;
+    g:=b-c*b;
     write(g)
 end;
 

@@ -13,7 +13,6 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 
-
 extern std::ofstream outfile;
 extern Memory memory;
 

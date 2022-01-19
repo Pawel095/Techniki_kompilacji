@@ -24,6 +24,8 @@ void Memory::reset_scope()
 {
     this->bp_up = 0;
     this->bp_dn = 0;
+    this->func_buffer = std::stringstream("");
+
     std::vector<int> ids_to_delete = std::vector<int>();
     for (Entry e : this->table)
     {
@@ -36,14 +38,14 @@ void Memory::reset_scope()
     {
         this->table.erase(this->table.begin() + *revit);
     }
-    int b=1;
+    int b = 1;
     // reindex after reset.
     for (size_t i = 0; i < this->table.size(); i++)
     {
         auto e = &(this->table[i]);
         e->mem_index = i;
     }
-    int a=1;
+    int a = 1;
 }
 void Memory::initial_bp(bool has_return_var)
 {
@@ -170,6 +172,8 @@ Entry Memory::get(std::string id)
             return a;
         }
     }
+    BREAKPOINT;
+    return Entry();
 }
 bool Memory::exists(std::string id)
 {
@@ -206,4 +210,23 @@ void Memory::update_entry(int index, Entry e)
 Entry Memory::operator[](int index)
 {
     return this->table[index];
+}
+void Memory::operator<<(std::string a)
+{
+    if (this->scope == SCOPE::GLOBAL)
+    {
+        outfile << a;
+    }
+    else
+    {
+        this->func_buffer << a;
+    }
+}
+std::string Memory::func_body()
+{
+    return this->func_buffer.str();
+}
+int Memory::local_temp_bytes()
+{
+    return this->bp_dn * -1;
 }

@@ -62,6 +62,7 @@
 %type <symtable_index_v> identifier_list
 %type <symtable_index_v> parameter_list
 %type <symtable_index_v> arguments
+%type <symtable_index> subprogram_head
 
 %%
 
@@ -70,7 +71,7 @@ program:
     {
         std::string msg = std::string("nazwa programu: ") + std::string(memory[$2].name_or_value);
         print_if_debug(msg,"program",ENABLEDP);
-        outfile<<"jump.i #"<<ENTRYPOINT_NAME<<std::endl;
+        memory<<std::string("jump.i #")+ENTRYPOINT_NAME + "\n";
         delete $4;
     }
     declarations 
@@ -83,11 +84,11 @@ program:
         memory.set_scope(SCOPE::GLOBAL);
         print_if_debug("Scope set to global","program->subprogram_declarations",ENABLEDP);
         // TODO: kod z funkcji :: close.
-        outfile<<ENTRYPOINT_NAME<<":"<<std::endl;
+        memory<<std::string(ENTRYPOINT_NAME) + ":" + "\n";
     }
     compound_statement '.'
     {
-        outfile<<"exit"<<std::endl;
+        memory<<std::string("exit\n");
     }
 ;
 identifier_list:
@@ -144,8 +145,12 @@ subprogram_declaration:
     subprogram_head declarations compound_statement
     {
         std::cout<<memory.dump().c_str()<<std::endl;
-        // TODO: drop temp variables
-        outfile<<"leave"<<std::endl<<"return"<<std::endl;
+        memory<<std::string("leave\nreturn\n");
+
+        outfile<<memory[$1].name_or_value<<":"<<std::endl;
+        outfile<<"enter.i #"<< memory.local_temp_bytes()<<std::endl;
+        outfile<<memory.func_body();
+        
         memory.reset_scope();
         print_if_debug("Scope reset","subprogram_declaration",ENABLEDP);
     }
@@ -171,6 +176,7 @@ subprogram_head:
             memory.allocate(id);
         }
         delete $3;
+        $$ = $2;
     }
 ;
 arguments:
@@ -230,14 +236,14 @@ statement:
         if (var.vartype != expr.vartype) {
             auto converted = memory.add_temp_var(var.vartype);
             if(var.vartype == STD_TYPES::INTEGER){
-                outfile<<asmfor_op2args(std::string("realtoint"), expr, converted);
+                memory<<asmfor_op2args(std::string("realtoint"), expr, converted);
             }
             if (var.vartype == STD_TYPES::REAL) {
-                outfile<<asmfor_op2args(std::string("inttoreal"), expr, converted);
+                memory<<asmfor_op2args(std::string("inttoreal"), expr, converted);
             }
-            outfile<<asmfor_op2args(std::string("mov"), converted, memory[$1]);
+            memory<<asmfor_op2args(std::string("mov"), converted, memory[$1]);
         }else{
-            outfile<<asmfor_op2args(std::string("mov"), memory[$3], memory[$1]);
+            memory<<asmfor_op2args(std::string("mov"), memory[$3], memory[$1]);
         }
     }
     | procedure_statement
@@ -246,7 +252,7 @@ statement:
     | while_t expression do_t statement
     | write_t '(' identifier_list ')'
     {
-        outfile<<asmfor_write(*$3);
+        memory<<asmfor_write(*$3);
         delete $3;
     }
 ;
@@ -290,7 +296,7 @@ simple_expression:
             zero.name_or_value=std::string("0");
             zero.vartype=term.vartype;
             
-            outfile<<asmfor_op3args(std::string("sub"), zero, term, temp);
+            memory<<asmfor_op3args(std::string("sub"), zero, term, temp);
             $$ = temp.mem_index;
         }
     }
@@ -302,24 +308,24 @@ simple_expression:
         if (expr.vartype != term.vartype) {
             auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
             if (expr.vartype != STD_TYPES::REAL) {
-                outfile<<asmfor_op2args(std::string("inttoreal"), expr, upgraded);
+                memory<<asmfor_op2args(std::string("inttoreal"), expr, upgraded);
                 expr = upgraded;
             }
             if (term.vartype != STD_TYPES::REAL) {
-                outfile<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
+                memory<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
                 term = upgraded;
             }
         }
         // all vars have the same type here.
         if ($2 == SIGN::PLUS) {
             auto tempvar = memory.add_temp_var(expr.vartype);
-            outfile<<asmfor_op3args(std::string("add"), expr, term, tempvar);
+            memory<<asmfor_op3args(std::string("add"), expr, term, tempvar);
             $$ = tempvar.mem_index;
         }
 
         if ($2 == SIGN::MINUS) {
             auto tempvar = memory.add_temp_var(expr.vartype);
-            outfile<<asmfor_op3args(std::string("sub"), expr, term, tempvar);
+            memory<<asmfor_op3args(std::string("sub"), expr, term, tempvar);
             $$ = tempvar.mem_index;
         }
     }
@@ -343,26 +349,26 @@ term:
         if (term.vartype != factor.vartype) {
             auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
             if (term.vartype != STD_TYPES::REAL) {
-                outfile<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
+                memory<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
                 term = upgraded;
             }
             if (factor.vartype != STD_TYPES::REAL) {
-                outfile<<asmfor_op2args(std::string("inttoreal"), factor, upgraded);
+                memory<<asmfor_op2args(std::string("inttoreal"), factor, upgraded);
                 factor = upgraded;
             }
         }
         // both real or both int.
         auto tempvar = memory.add_temp_var(term.vartype);
         if ($2 == MULOP::STAR) {
-            outfile<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
+            memory<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
             $$ = tempvar.mem_index;
         }
         if ($2 == MULOP::SLASH or $2 == MULOP::DIV) {
-            outfile<<asmfor_op3args(std::string("div"), term, factor, tempvar);
+            memory<<asmfor_op3args(std::string("div"), term, factor, tempvar);
             $$ = tempvar.mem_index;
         }
         if ($2 == MULOP::MOD){
-            outfile<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
+            memory<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
             $$ = tempvar.mem_index;
         }
     }
