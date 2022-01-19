@@ -5,14 +5,50 @@ Memory::Memory() {}
 
 Memory::~Memory() {}
 
+bool is_local_val(Entry e)
+{
+    return e.type == ENTRY_TYPES::ARGUMENT | e.type == ENTRY_TYPES::LOCAL_VAR;
+}
+
 void Memory::set_scope(SCOPE scope)
 {
     this->scope = scope;
+    this->reset_scope();
+}
+SCOPE Memory::get_scope()
+{
+    return this->scope;
+}
+
+void Memory::reset_scope()
+{
+    this->bp_up = 0;
+    this->bp_dn = 0;
+    for (Entry e : this->table)
+    {
+        if (is_local_val(e))
+        {
+            this->table.erase(this->table.begin() + e.mem_index);
+        }
+    }
+}
+
+void Memory::initial_bp(bool has_return_var)
+{
+    if (has_return_var)
+    {
+        this->bp_dn = 0;
+        this->bp_up = 12;
+    }
+    else
+    {
+        this->bp_dn = 0;
+        this->bp_up = 8;
+    }
 }
 
 fort::char_table Memory::dump()
 {
-    std::cout << "MEMORY: " << std::endl;
     fort::char_table out;
     out << fort::header << "ENTRY_TYPE"
         << "name_or_value"
@@ -21,7 +57,7 @@ fort::char_table Memory::dump()
         << "STD_TYPE" << fort::endr;
     for (auto e : this->table)
     {
-        out << enum2str(e.type) << e.name_or_value << e.address << e.mem_index << enum2str(e.vartype) << fort::endr;
+        out << enum2str(e.type) << e.name_or_value << e.get_asm_var() << e.mem_index << enum2str(e.vartype) << fort::endr;
     }
     return out;
 }
@@ -36,8 +72,12 @@ int Memory::add_entry(Entry e)
 
 Entry Memory::add_temp_var(STD_TYPES type)
 {
+
     Entry e = Entry();
-    e.type = ENTRY_TYPES::VAR;
+    if (this->scope == SCOPE::LOCAL)
+        e.type = ENTRY_TYPES::LOCAL_VAR;
+    else
+        e.type = ENTRY_TYPES::VAR;
     e.vartype = type;
     e.name_or_value = std::string("$t") + std::to_string(this->temp_var_count);
     this->temp_var_count += 1;
@@ -54,15 +94,40 @@ void Memory::allocate(int id)
     e->mem_index = id;
     if (e->type == ENTRY_TYPES::VAR)
     {
+        e->address = this->address_pointer;
         switch (e->vartype)
         {
         case STD_TYPES::INTEGER:
-            e->address = this->address_pointer;
             this->address_pointer += 4;
             break;
         case STD_TYPES::REAL:
-            e->address = this->address_pointer;
             this->address_pointer += 8;
+            break;
+        }
+    }
+    else if (e->type == ENTRY_TYPES::LOCAL_VAR)
+    {
+        switch (e->vartype)
+        {
+        case STD_TYPES::INTEGER:
+            this->bp_dn -= 4;
+            break;
+        case STD_TYPES::REAL:
+            this->bp_dn -= 8;
+            break;
+        }
+        e->address = this->bp_dn;
+    }
+    else if (e->type == ENTRY_TYPES::ARGUMENT)
+    {
+        e->address = this->bp_up;
+        switch (e->vartype)
+        {
+        case STD_TYPES::INTEGER:
+            this->bp_up += 4;
+            break;
+        case STD_TYPES::REAL:
+            this->bp_up += 8;
             break;
         }
     }
@@ -76,6 +141,15 @@ void Memory::allocate(int id)
 
 Entry Memory::get(std::string id)
 {
+    // Search local scope first, then global.
+    for (auto a : this->table)
+    {
+        if (is_local_val(a) && a.name_or_value == id)
+        {
+            return a;
+        }
+    }
+
     for (size_t i = 0; i < this->table.size(); i++)
     {
         auto a = this->table[i];
@@ -87,15 +161,30 @@ Entry Memory::get(std::string id)
 }
 bool Memory::exists(std::string id)
 {
-    for (size_t i = 0; i < this->table.size(); i++)
+    if (this->scope == SCOPE::GLOBAL)
     {
-        auto a = this->table[i];
-        if (a.name_or_value == id)
+        for (size_t i = 0; i < this->table.size(); i++)
         {
-            return true;
+            auto a = this->table[i];
+            if (a.name_or_value == id)
+            {
+                return true;
+            }
         }
+        return false;
     }
-    return false;
+    else
+    {
+        //Search local scope
+        for (auto a : this->table)
+        {
+            if (is_local_val(a) && a.name_or_value == id)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 void Memory::update_entry(int index, Entry e)
 {

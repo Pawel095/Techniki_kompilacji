@@ -39,6 +39,8 @@ enum SCOPE
 enum ENTRY_TYPES
 {
     VAR,
+    LOCAL_VAR,
+    ARGUMENT,
     CONST,
     FUNC,
     PROCEDURE,

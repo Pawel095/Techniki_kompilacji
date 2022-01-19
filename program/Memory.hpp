@@ -14,14 +14,21 @@ class Memory
 {
 private:
     std::vector<Entry> table;
-    SCOPE scope;
     int address_pointer = 0;
     unsigned int temp_var_count = 0;
+
+    SCOPE scope;
+    int bp_up=0;
+    int bp_dn=0;
 
 public:
     Memory();
     ~Memory();
     void set_scope(SCOPE scope);
+    SCOPE get_scope();
+    void reset_scope();
+
+    void initial_bp(bool has_return_var);
 
     int add_entry(Entry e);
     Entry add_temp_var(STD_TYPES type);

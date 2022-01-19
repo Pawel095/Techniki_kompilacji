@@ -7,7 +7,7 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 %{
     #include "global.hpp"
     #include "debug/printer.hpp"
-    bool ENABLEDL=true;
+    bool ENABLEDL=false;
 %}
 
 %%
@@ -208,7 +208,6 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     if (!memory.exists(name)){
         Entry e = Entry();
         e.name_or_value=name;
-        e.type = ENTRY_TYPES::IGNORE;
         int i=memory.add_entry(e);
         yylval.symtable_index = i;
     } else {

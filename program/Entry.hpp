@@ -8,11 +8,11 @@ class Entry
 {
 private:
 public:
-    ENTRY_TYPES type;
+    ENTRY_TYPES type = ENTRY_TYPES::IGNORE;
     std::string name_or_value;
     int address = -1;
     int mem_index = -1;
-    STD_TYPES vartype = UNDEFINED;
+    STD_TYPES vartype = STD_TYPES::UNDEFINED;
     std::string get_asm_var();
 };
 #endif

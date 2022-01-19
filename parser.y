@@ -60,6 +60,8 @@
 %type <symtable_index> expression
 %type <symtable_index> variable
 %type <symtable_index_v> identifier_list
+%type <symtable_index_v> parameter_list
+%type <symtable_index_v> arguments
 
 %%
 
@@ -74,10 +76,12 @@ program:
     declarations 
     {
         memory.set_scope(SCOPE::LOCAL);
+        print_if_debug("Scope set to local","program->declarations",ENABLEDP);
     }
     subprogram_declarations
     {
         memory.set_scope(SCOPE::GLOBAL);
+        print_if_debug("Scope set to global","program->subprogram_declarations",ENABLEDP);
         // TODO: kod z funkcji :: close.
         outfile<<ENTRYPOINT_NAME<<":"<<std::endl;
     }
@@ -106,7 +110,10 @@ declarations:
         {
             auto entry = memory[index];
             int a=1;
-            entry.type=ENTRY_TYPES::VAR;
+            if (memory.get_scope()==SCOPE::GLOBAL)
+                entry.type=ENTRY_TYPES::VAR;
+            else
+                entry.type = ENTRY_TYPES::LOCAL_VAR;
             entry.vartype=$5;
             memory.update_entry(index,entry);
             memory.allocate(index);
@@ -133,24 +140,69 @@ subprogram_declarations:
     subprogram_declarations subprogram_declaration ';'
     | %empty
 ;
-subprogram_declaration: 
+subprogram_declaration:
     subprogram_head declarations compound_statement
+    {
+        std::cout<<memory.dump().c_str()<<std::endl;
+        // TODO: drop temp variables
+        // TODO: leave,return.
+    }
 ;
 subprogram_head:
     function_t ident_t arguments ':' standard_type ';'
+    {
+        std::cout<<"Func "<<memory[$2].name_or_value<<std::endl;
+        delete $3;
+    }
     | procedure_t ident_t arguments ';'
+    {
+        // TODO: add label here
+        memory.reset_scope();
+        print_if_debug("Scope reset","subprogram_head[1]",ENABLEDP);
+        memory.initial_bp(false);
+        auto func = memory[$2];
+        func.type=ENTRY_TYPES::PROCEDURE;
+        memory.update_entry($2,func);
+        // add args to symtable
+        for (auto id:*$3){
+            auto arg = memory[id];
+            arg.type = ENTRY_TYPES::ARGUMENT;
+            memory.update_entry(id,arg);
+            memory.allocate(id);
+        }
+        delete $3;
+    }
 ;
 arguments:
     '(' parameter_list ')'
+    {
+        $$ = $2;
+    }
     | %empty
+    {
+        $$ = new std::vector<int>();
+    }
 ;
 parameter_list:
     identifier_list ':' type
     {
-        delete $1;
+        print_if_debug(*$1,"parameter_list[0]->identifier_list",ENABLEDP);
+        for (auto id:*$1) {
+            auto entry = memory[id];
+            entry.vartype = $3;
+            memory.update_entry(id,entry);
+        }
+        $$ = $1;
     }
     | parameter_list ';' identifier_list ':' type
     {
+        print_if_debug(*$3,"parameter_list[1]->identifier_list",ENABLEDP);
+        for (auto index:*$3) {
+            $$->push_back(index);
+            auto entry = memory[index];
+            entry.vartype = $5;
+            memory.update_entry(index,entry);
+        }
         delete $3;
     }
 ;

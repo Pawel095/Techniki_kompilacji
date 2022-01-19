@@ -22,6 +22,7 @@
         "sstream": "cpp",
         "streambuf": "cpp",
         "utility": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "stdexcept": "cpp"
     }
 }

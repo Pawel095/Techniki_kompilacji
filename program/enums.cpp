@@ -6,6 +6,8 @@ std::string enum2str(ENTRY_TYPES e)
     {
     case ENTRY_TYPES::VAR:
         return std::string("VAR");
+    case ENTRY_TYPES::LOCAL_VAR:
+        return std::string("LOCAL_VAR");
     case ENTRY_TYPES::CONST:
         return std::string("CONST");
     case ENTRY_TYPES::PROCEDURE:
@@ -14,6 +16,8 @@ std::string enum2str(ENTRY_TYPES e)
         return std::string("FUNC");
     case ENTRY_TYPES::IGNORE:
         return std::string("IGNORE");
+    case ENTRY_TYPES::ARGUMENT:
+        return std::string("ARGUMENT");
 
     default:
         return std::string("UNKNOWN");

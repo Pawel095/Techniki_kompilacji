@@ -27,7 +27,7 @@ std::string asmfor_write(std::vector<int> ids)
         if (e.vartype == STD_TYPES::REAL)
             r += "r";
         r += " ";
-        r += std::to_string(e.address);
+        r += e.get_asm_var();
         r += "\n";
     }
     return r;

@@ -24,3 +24,13 @@ void print_if_debug(const std::vector<char *> *strings, const char *prefix, bool
         }
     }
 }
+void print_if_debug(const std::vector<int> ids, const char *prefix, bool enabled)
+{
+    if (enabled)
+    {
+        for (auto id : ids)
+        {
+            std::cout << prefix << ": \'" << std::to_string(id) << "\'" << std::endl;
+        }
+    }
+}
