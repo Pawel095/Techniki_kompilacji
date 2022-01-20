@@ -16,6 +16,7 @@
     int symtable_index;
     RELOP cmp;
     STD_TYPES std_type;
+    TypeAllocator type_allocator;
     SIGN sign;
     MULOP mulop;
 }
@@ -54,7 +55,7 @@
 
 
 %type <std_type> standard_type
-%type <std_type> type
+%type <type_allocator> type
 %type <symtable_index> factor
 %type <symtable_index> term
 %type <symtable_index> simple_expression
@@ -117,7 +118,7 @@ declarations:
                 entry.type=ENTRY_TYPES::VAR;
             else
                 entry.type = ENTRY_TYPES::LOCAL_VAR;
-            entry.vartype=$5;
+            entry.vartype=$5.type;
             memory.update_entry(index,entry);
             memory.allocate(index);
         }
@@ -128,7 +129,7 @@ declarations:
 type:
     standard_type
     {
-        $$ = $1;
+        $$ = TypeAllocator();
     }
     | array_t '[' num_t array_range_t num_t ']' of_t standard_type
     {
@@ -222,7 +223,7 @@ parameter_list:
         print_if_debug(*$1,"parameter_list[0]->identifier_list",ENABLEDP);
         for (auto id:*$1) {
             auto entry = memory[id];
-            entry.vartype = $3;
+            entry.vartype = $3.type;
             memory.update_entry(id,entry);
         }
         $$ = $1;
@@ -233,7 +234,7 @@ parameter_list:
         for (auto index:*$3) {
             $$->push_back(index);
             auto entry = memory[index];
-            entry.vartype = $5;
+            entry.vartype = $5.type;
             memory.update_entry(index,entry);
         }
         delete $3;

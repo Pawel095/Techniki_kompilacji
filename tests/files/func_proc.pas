@@ -14,19 +14,19 @@ end;
 function p1(a:real):real;
 var temp:real;
 begin
-    temp:= a/2;
-    p1:=(temp-a)*3*temp
+    temp:= a;
+    p1:=temp*a
 end;
 
 function p2(a:integer):integer;
 var temp:integer;
 begin
-    temp:= a*2;
-    p2:=(temp-a)/(3*temp)
+    temp:= a;
+    p2:=temp/a
 end;
 
 
 begin
-    show(p1(9999),p2(1.02E3));
+    show(p1(4),p2(1.0E2));
     write(g)
 end.

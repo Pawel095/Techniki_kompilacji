@@ -40,6 +40,7 @@ enum ENTRY_TYPES
 {
     VAR,
     LOCAL_VAR,
+    ARRAY,
     ARGUMENT,
     CONST,
     FUNC,

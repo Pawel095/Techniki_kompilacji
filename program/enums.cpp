@@ -18,6 +18,8 @@ std::string enum2str(ENTRY_TYPES e)
         return std::string("IGNORE");
     case ENTRY_TYPES::ARGUMENT:
         return std::string("ARGUMENT");
+    case ENTRY_TYPES::ARRAY:
+        return std::string("ARRAY");
 
     default:
         return std::string("UNKNOWN");

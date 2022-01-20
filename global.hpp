@@ -9,6 +9,7 @@
 
 #include "program/enums.hpp"
 #include "program/Memory.hpp"
+#include "program/TypeAllocator.hpp"
 
 #include "lexer.hpp"
 #include "parser.hpp"
