@@ -267,9 +267,9 @@ statement:
             if (var.vartype == STD_TYPES::REAL) {
                 memory<<asmfor_op2args(std::string("inttoreal"), expr, converted);
             }
-            memory<<asmfor_op2args(std::string("mov"), converted, memory[$1]);
+            memory<<asmfor_op2args(std::string("mov"), converted, var);
         }else{
-            memory<<asmfor_op2args(std::string("mov"), memory[$3], memory[$1]);
+            memory<<asmfor_op2args(std::string("mov"), expr, var);
         }
     }
     | procedure_statement

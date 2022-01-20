@@ -7,7 +7,7 @@ Memory::~Memory() {}
 
 bool is_local_val(Entry e)
 {
-    return e.type == ENTRY_TYPES::ARGUMENT | e.type == ENTRY_TYPES::LOCAL_VAR;
+    return e.type == ENTRY_TYPES::ARGUMENT || e.type == ENTRY_TYPES::LOCAL_VAR;
 }
 
 void Memory::set_scope(SCOPE scope)
@@ -173,26 +173,32 @@ Entry Memory::get(std::string id)
     BREAKPOINT;
     return Entry();
 }
+
 bool Memory::exists(std::string id)
 {
-    // Search local scope first, then global.
-    for (auto a : this->table)
+    if (this->scope == SCOPE::GLOBAL)
     {
-        if (is_local_val(a) && a.name_or_value == id)
+        for (size_t i = 0; i < this->table.size(); i++)
         {
-            return true;
+            auto a = this->table[i];
+            if (a.name_or_value == id)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    else
+    {
+        //Search local scope, then global
+        for (auto a : this->table)
+        {
+            if ((is_local_val(a) || a.type == ENTRY_TYPES::FUNC) && a.name_or_value == id)
+            {
+                return true;
+            }
         }
     }
-
-    for (size_t i = 0; i < this->table.size(); i++)
-    {
-        auto a = this->table[i];
-        if (a.name_or_value == id)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 void Memory::update_entry(int index, Entry e)
 {
