@@ -16,7 +16,9 @@ void init()
 }
 void cleanup()
 {
-    fclose(yyin);
+    std::cout << "Cleaning up." << std::endl;
+    if (yyin != nullptr)
+        fclose(yyin);
     yylex_destroy();
     outfile.close();
 }

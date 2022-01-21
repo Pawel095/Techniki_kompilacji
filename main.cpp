@@ -3,7 +3,7 @@
 int main(int argc, char const *argv[])
 {
     std::atexit(cleanup);
-    
+
     yydebug = 0;
 
     const char *cwd = argv[0];
@@ -16,11 +16,13 @@ int main(int argc, char const *argv[])
     if (yyin == nullptr)
     {
         std::cout << "Wrong path: " << argv[1] << std::endl;
-        fclose(yyin);
-        exit(1);
+        return 1;
     }
-    init();
-    yyparse();
-    std::cout << memory.dump().to_string() << std::endl;
-    return 0;
+    else
+    {
+        init();
+        yyparse();
+        std::cout << memory.dump().to_string() << std::endl;
+        return 0;
+    }
 }

@@ -1,9 +1,12 @@
 #!/bin/bash
 
-make clean > /dev/null
 make -j4
 valgrind='valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1'
-INPUT=`find ./tests/files -xtype f -iname *.pas`
+if [ $# -ne 0 ]; then
+    INPUT=$@
+else
+    INPUT=`find ./tests/files -xtype f -iname *.pas`
+fi
 for i in $INPUT; do
     echo '===================================================================================='
     echo compile with mine + valgrind:
