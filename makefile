@@ -4,8 +4,8 @@ flex = flex
 compiler = g++
 cflags = -g --std=c++2a
 libraries =
-bison = bison
-bflags = -g --verbose --debug
+bison = ./bisonbin/bin/bison
+bflags = -g --verbose --debug -Wall
 
 ccmd = ${compiler} ${cflags} ${libraries}
 bisoncmd = $(bison) $(bflags)

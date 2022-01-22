@@ -50,5 +50,6 @@
         "iosfwd": "cpp",
         "new": "cpp",
         "cinttypes": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

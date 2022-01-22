@@ -2,9 +2,11 @@
 out
 bin64*
 parser.dot
+parser.gv
 parser.output
 bin64/*
 lexer.cpp
 parser.hpp
 parser.cpp
 output.asm
+bison*

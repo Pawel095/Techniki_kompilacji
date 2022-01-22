@@ -1,5 +1,7 @@
+%define parse.error detailed 
+
+
 %{
-    #define YYERROR_VERBOSE 1
     // REMLAT: disable debug
     bool ENABLEDP=true;
     const char* ENTRYPOINT_NAME = "entrypoint";
@@ -66,6 +68,8 @@
 %type <symtable_index_v> parameter_list
 %type <symtable_index_v> arguments
 %type <symtable_index> subprogram_head
+
+%destructor {delete $$;} <symtable_index_v>
 
 %%
 
