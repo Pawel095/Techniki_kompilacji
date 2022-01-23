@@ -107,32 +107,32 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
 
 "=" {
     print_if_debug(yytext,"relop_t",ENABLEDL);
-    yylval.cmp =RELOP::EQUAL;
+    yylval.relop =RELOP::EQUAL;
     return relop_t;
 }
 "<>" {
     print_if_debug(yytext,"relop_t",ENABLEDL);
-    yylval.cmp = RELOP::NOTEQUAL;
+    yylval.relop = RELOP::NOTEQUAL;
     return relop_t;
 }
 "<" {
     print_if_debug(yytext,"relop_t",ENABLEDL);
-    yylval.cmp = RELOP::LESS;
+    yylval.relop = RELOP::LESS;
     return relop_t;
 }
 "<=" {
     print_if_debug(yytext,"relop_t",ENABLEDL);
-    yylval.cmp = RELOP::LESSEQ;
+    yylval.relop = RELOP::LESSEQ;
     return relop_t;
 }
 ">" {
     print_if_debug(yytext,"relop_t",ENABLEDL);
-    yylval.cmp =RELOP::MORE;
+    yylval.relop =RELOP::MORE;
     return relop_t;
 }
 ">=" {
     print_if_debug(yytext,"relop_t",ENABLEDL);
-    yylval.cmp = RELOP::MOREEQ;
+    yylval.relop = RELOP::MOREEQ;
     return relop_t;
 }
 

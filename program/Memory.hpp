@@ -19,6 +19,8 @@ private:
     unsigned int temp_var_count = 0;
     std::stringstream func_buffer;
 
+    int label_count = 0;
+
     SCOPE scope;
     int bp_up = 0;
     int bp_dn = 0;
@@ -49,5 +51,7 @@ public:
 
     Entry operator[](int index);
     void operator<<(std::string);
+
+    Entry make_label();
 };
 #endif

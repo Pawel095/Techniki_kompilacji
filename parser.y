@@ -16,7 +16,7 @@
 %union{
     std::vector<int>* symtable_index_v;
     int symtable_index;
-    RELOP cmp;
+    RELOP relop;
     STD_TYPES std_type;
     TypeAllocator type_allocator;
     SIGN sign;
@@ -49,7 +49,7 @@
 %token read_t
 
 %token assign_op_t
-%token relop_t
+%token <relop> relop_t
 %token <sign> sign_t
 %token <mulop> mulop_t
 %token or_t
@@ -114,7 +114,7 @@ identifier_list:
 declarations:
     declarations var_t identifier_list ':' type ';'
     {
-        for (auto index : *$3) 
+        for (auto index : *$3)
         {
             auto entry = memory[index];
             int a=1;
@@ -191,7 +191,6 @@ subprogram_head:
     }
     | procedure_t ident_t arguments ';'
     {
-        // TODO: add label here
         memory.initial_bp(false);
         auto func = memory[$2];
         func.type=ENTRY_TYPES::PROCEDURE;
@@ -280,10 +279,13 @@ statement:
     | procedure_statement
     | compound_statement
     | if_t expression then_t statement else_t statement
-    | while_t expression do_t statement
-    | write_t '(' identifier_list ')'
     {
-        memory<<asmfor_write(*$3);
+        print_if_debug("IF","statement[3]",ENABLEDP);
+    }
+    | while_t expression do_t statement
+    | write_t '(' expression_list ')'
+    {
+        memory<<asmfor_op1arg_v(std::string("write"),*$3);
         delete $3;
     }
 ;
@@ -375,6 +377,36 @@ expression:
         $$=$1;
     }
     | simple_expression relop_t simple_expression
+    {
+        auto left = memory[$1];
+        auto right = memory[$3];
+        RELOP relop = $2;
+        auto result = memory.add_temp_var(STD_TYPES::INTEGER);
+
+        switch(relop){
+            case RELOP::EQUAL:
+                memory<<asmfor_relop(std::string("je"),left,right,result);
+                break;
+            case RELOP::NOTEQUAL:
+                memory<<asmfor_relop(std::string("jne"),left,right,result);
+                break;
+            case RELOP::LESS:
+                memory<<asmfor_relop(std::string("jl"),left,right,result);
+                break;
+            case RELOP::LESSEQ:
+                memory<<asmfor_relop(std::string("jle"),left,right,result);
+                break;
+            case RELOP::MORE:
+                memory<<asmfor_relop(std::string("jg"),left,right,result);
+                break;
+            case RELOP::MOREEQ:
+                memory<<asmfor_relop(std::string("jge"),left,right,result);
+                break;
+            default:
+                break;
+        }
+        $$ = result.mem_index;
+    }
 ;
 simple_expression:
     term

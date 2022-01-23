@@ -186,19 +186,17 @@ bool Memory::exists(std::string id)
                 return true;
             }
         }
-        return false;
     }
     else
     {
         //Search local scope, then global
         for (auto a : this->table)
         {
-            if ((is_local_val(a) || a.type == ENTRY_TYPES::FUNC) && a.name_or_value == id)
-            {
+            if ((is_local_val(a) || a.type == ENTRY_TYPES::FUNC || a.type == ENTRY_TYPES::PROCEDURE) && a.name_or_value == id)
                 return true;
-            }
         }
     }
+    return false;
 }
 void Memory::update_entry(int index, Entry e)
 {
@@ -227,4 +225,11 @@ std::string Memory::func_body()
 int Memory::local_temp_bytes()
 {
     return this->bp_dn * -1;
+}
+Entry Memory::make_label()
+{
+    Entry ret = Entry();
+    ret.type = ENTRY_TYPES::LABEL;
+    ret.name_or_value = std::string("label") + std::to_string(this->label_count++);
+    return ret;
 }

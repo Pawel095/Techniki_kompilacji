@@ -3,7 +3,7 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-enum RELOP
+enum class RELOP
 {
     EQUAL,
     NOTEQUAL,
@@ -12,7 +12,7 @@ enum RELOP
     MORE,
     MOREEQ
 };
-enum MULOP
+enum class MULOP
 {
     STAR,
     SLASH,
@@ -20,23 +20,23 @@ enum MULOP
     MOD,
     AND
 };
-enum SIGN
+enum class SIGN
 {
     PLUS,
     MINUS
 };
-enum STD_TYPES
+enum class STD_TYPES
 {
     INTEGER,
     REAL,
     UNDEFINED
 };
-enum SCOPE
+enum class SCOPE
 {
     GLOBAL,
     LOCAL
 };
-enum ENTRY_TYPES
+enum class ENTRY_TYPES
 {
     VAR,
     LOCAL_VAR,
@@ -45,6 +45,7 @@ enum ENTRY_TYPES
     CONST,
     FUNC,
     PROCEDURE,
+    LABEL,
     IGNORE
 };
 std::string enum2str(ENTRY_TYPES e);
