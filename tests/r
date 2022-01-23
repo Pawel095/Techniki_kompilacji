@@ -37,7 +37,4 @@ for i in $INPUT; do
     fi
 
 done
-rm -f ./tests/original.asm
-make clean
-make headers
 exit 0

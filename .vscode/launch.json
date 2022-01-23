@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/files/if1.pas"
+                "./tests/files/recur_func.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

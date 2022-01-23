@@ -306,15 +306,16 @@ statement:
     else_t
     {
         auto else_l = memory.if_label_stack[memory.if_label_stack.size()-2];
-        memory<<else_l.get_asm_ptr() + std::string("")+"\n";
+        memory<<else_l.get_asm_ptr() +"\n";
     }
     statement
     {
         // TODO: insert end label and pop the label
         auto end_l = memory.if_label_stack.back();
 
-        memory<<end_l.get_asm_ptr() + std::string("")+"\n";
-
+        memory<<end_l.get_asm_ptr() +"\n";
+        memory.if_label_stack.pop_back();
+        memory.if_label_stack.pop_back();
     }
     | while_t expression do_t statement
     | write_t '(' expression_list ')'
@@ -611,7 +612,7 @@ factor:
             }
         }
         auto return_value = memory.add_temp_var(func.vartype);
-        memory<<std::string("push.i #") + std::to_string(return_value.address)+"\n";
+        memory<<std::string("push.i ") + return_value.get_asm_ptr()+"\n";
         memory<<std::string("call.i #") + func.name_or_value+"\n";
         memory<<std::string("incsp.i #") + std::to_string($3->size() * 4) +"\n";
         delete $3;
