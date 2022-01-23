@@ -27,6 +27,7 @@ private:
 
 public:
     Entry current_function;
+    std::vector<Entry> if_label_stack = std::vector<Entry>();
 
     Memory();
     ~Memory();

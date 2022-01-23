@@ -5,7 +5,7 @@ compiler = g++
 cflags = -g --std=c++2a
 libraries =
 bison = ./bisonbin/bin/bison
-bflags = -g --verbose --debug -Wall
+bflags = -g --verbose --debug
 
 ccmd = ${compiler} ${cflags} ${libraries}
 bisoncmd = $(bison) $(bflags)

@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/files/relop1.pas"
+                "./tests/files/if1.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

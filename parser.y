@@ -108,6 +108,7 @@ identifier_list:
     | identifier_list ',' ident_t
     {
         $$->push_back($3);
+        print_if_debug(*$1,"identifier_list[1]->identifier_list",ENABLEDP);
         print_if_debug(memory[$3].name_or_value,"identifier_list[1]->ident_t",ENABLEDP);
     }
 ;
@@ -233,6 +234,7 @@ parameter_list:
     }
     | parameter_list ';' identifier_list ':' type
     {
+        print_if_debug(*$1,"parameter_list[1]->parameter_list",ENABLEDP);
         print_if_debug(*$3,"parameter_list[1]->identifier_list",ENABLEDP);
         for (auto index:*$3) {
             $$->push_back(index);
@@ -278,9 +280,41 @@ statement:
     }
     | procedure_statement
     | compound_statement
-    | if_t expression then_t statement else_t statement
+    | if_t expression 
     {
-        print_if_debug("IF","statement[3]",ENABLEDP);
+        print_if_debug("IF","statement[3]->expr",ENABLEDP);
+        auto else_l = memory.make_label();
+        auto end_l = memory.make_label();
+        // TODO: push labels to the label stack (else_l, end_l)
+        memory.if_label_stack.push_back(else_l);
+        memory.if_label_stack.push_back(end_l);
+        // TODO: check expression, then jump to the else_l.
+        Entry false_ = Entry();
+        false_.type = ENTRY_TYPES::CONST;
+        false_.name_or_value = std::string("0");
+        false_.vartype = STD_TYPES::INTEGER;
+
+        memory<<asmfor_op3args(std::string("je"), memory[$2], false_, else_l);
+    }
+    then_t statement
+    {
+        // get end_l from label stack
+        auto end_l = memory.if_label_stack.back();
+        // TODO: insert jump to the end_l
+        memory<<std::string("jump.i ")+end_l.get_asm_var()+"\n";
+    }
+    else_t
+    {
+        auto else_l = memory.if_label_stack[memory.if_label_stack.size()-2];
+        memory<<else_l.get_asm_ptr() + std::string("")+"\n";
+    }
+    statement
+    {
+        // TODO: insert end label and pop the label
+        auto end_l = memory.if_label_stack.back();
+
+        memory<<end_l.get_asm_ptr() + std::string("")+"\n";
+
     }
     | while_t expression do_t statement
     | write_t '(' expression_list ')'
@@ -368,6 +402,7 @@ expression_list:
         $$->push_back($1);
     }
     | expression_list ',' expression {
+        print_if_debug(*$1,"expression_list[1]->expression_list",ENABLEDP);
         $$->push_back($3);
     }
 ;
