@@ -117,7 +117,6 @@ declarations:
         for (auto index : *$3)
         {
             auto entry = memory[index];
-            int a=1;
             if (memory.get_scope()==SCOPE::GLOBAL)
                 entry.type=ENTRY_TYPES::VAR;
             else
@@ -447,19 +446,41 @@ simple_expression:
             }
         }
         // all vars have the same type here.
-        if ($2 == SIGN::PLUS) {
-            auto tempvar = memory.add_temp_var(expr.vartype);
-            memory<<asmfor_op3args(std::string("add"), expr, term, tempvar);
-            $$ = tempvar.mem_index;
-        }
+        auto tempvar = memory.add_temp_var(expr.vartype);
 
-        if ($2 == SIGN::MINUS) {
-            auto tempvar = memory.add_temp_var(expr.vartype);
-            memory<<asmfor_op3args(std::string("sub"), expr, term, tempvar);
-            $$ = tempvar.mem_index;
+        switch($2){
+            case SIGN::PLUS:
+                memory<<asmfor_op3args(std::string("add"), expr, term, tempvar);
+                break;
+            case SIGN::MINUS:
+                memory<<asmfor_op3args(std::string("sub"), expr, term, tempvar);
+                break;
         }
+        $$ = tempvar.mem_index;
     }
     | simple_expression or_t term
+    {
+        print_if_debug(std::to_string($1),"simple_expression[3]->simple_expression",ENABLEDP);
+        print_if_debug(std::string("or"),"simple_expression[3]",ENABLEDP);
+        print_if_debug(std::to_string($3),"simple_expression[3]->term",ENABLEDP);
+
+        auto expr = memory[$1];
+        auto term = memory[$3];
+        
+        if (expr.vartype != STD_TYPES::INTEGER) {
+            auto upgraded = memory.add_temp_var(STD_TYPES::INTEGER);
+            memory<<asmfor_op2args(std::string("realtoint"), expr, upgraded);
+            expr = upgraded;
+        }
+        if (term.vartype != STD_TYPES::INTEGER) {
+            auto upgraded = memory.add_temp_var(STD_TYPES::INTEGER);
+            memory<<asmfor_op2args(std::string("realtoint"), term, upgraded);
+            term = upgraded;
+        }
+        // all vars have the same type here.
+        auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
+        memory<<asmfor_op3args(std::string("add"), expr, term, tempvar);
+    }
 ;
 term:
     factor
@@ -489,21 +510,27 @@ term:
         }
         // both real or both int.
         auto tempvar = memory.add_temp_var(term.vartype);
-        if ($2 == MULOP::STAR) {
-            memory<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
-            $$ = tempvar.mem_index;
+        switch($2){
+            case MULOP::STAR:
+                memory<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
+                break;
+            case MULOP::SLASH:
+            case MULOP::DIV:
+                memory<<asmfor_op3args(std::string("div"), term, factor, tempvar);
+                break;
+            case MULOP::MOD:
+                memory<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
+                break;
+            case MULOP::AND:
+                memory<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
+                break;
+            default:
+                break;
         }
-        if ($2 == MULOP::SLASH or $2 == MULOP::DIV) {
-            memory<<asmfor_op3args(std::string("div"), term, factor, tempvar);
-            $$ = tempvar.mem_index;
-        }
-        if ($2 == MULOP::MOD){
-            memory<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
-            $$ = tempvar.mem_index;
-        }
+        $$ = tempvar.mem_index;
     }
 ;
-factor: // Send memory adress up, not the bloody value.
+factor:
     variable
     {
         print_if_debug(std::to_string($1), "factor[0]->variable", ENABLEDP);
@@ -565,7 +592,16 @@ factor: // Send memory adress up, not the bloody value.
     }
     | not_t factor
     {
+        auto factor = memory[$2];
+        Entry zero = Entry();
+        zero.type = ENTRY_TYPES::CONST;
+        zero.name_or_value = std::string("0");
+        zero.vartype = STD_TYPES::INTEGER;
+        Entry result = memory.add_temp_var(STD_TYPES::INTEGER);
 
+        print_if_debug("not "+std::to_string($2),"factor[4]->factor",ENABLEDP);
+        memory<<asmfor_relop(std::string("je"),factor,zero,result);
+        $$ = result.mem_index;
     }
 ;
 %%
