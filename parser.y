@@ -317,7 +317,11 @@ statement:
         memory.if_label_stack.pop_back();
         memory.if_label_stack.pop_back();
     }
-    | while_t expression do_t statement
+    | while_t
+    {
+
+    }
+    expression do_t statement
     | write_t '(' expression_list ')'
     {
         memory<<asmfor_op1arg_v(std::string("write"),*$3);
@@ -417,6 +421,19 @@ expression:
         auto left = memory[$1];
         auto right = memory[$3];
         RELOP relop = $2;
+
+        // upgrade vars to real if needed
+        if (left.vartype != right.vartype) {
+            auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
+            if (left.vartype != STD_TYPES::REAL) {
+                memory<<asmfor_op2args(std::string("inttoreal"), left, upgraded);
+                left = upgraded;
+            }
+            if (right.vartype != STD_TYPES::REAL) {
+                memory<<asmfor_op2args(std::string("inttoreal"), right, upgraded);
+                right = upgraded;
+            }
+        }
         auto result = memory.add_temp_var(STD_TYPES::INTEGER);
 
         switch(relop){
@@ -502,20 +519,23 @@ simple_expression:
 
         auto expr = memory[$1];
         auto term = memory[$3];
-        
-        if (expr.vartype != STD_TYPES::INTEGER) {
-            auto upgraded = memory.add_temp_var(STD_TYPES::INTEGER);
-            memory<<asmfor_op2args(std::string("realtoint"), expr, upgraded);
-            expr = upgraded;
+        if (expr.vartype != term.vartype){
+            auto upgraded = memory.add_temp_var(STD_TYPES::REAL);
+            if (expr.vartype != STD_TYPES::REAL) {
+                memory<<asmfor_op2args(std::string("inttoreal"), expr, upgraded);
+                expr = upgraded;
+            }
+            if (term.vartype != STD_TYPES::REAL) {
+                memory<<asmfor_op2args(std::string("inttoreal"), term, upgraded);
+                term = upgraded;
+            }
         }
-        if (term.vartype != STD_TYPES::INTEGER) {
-            auto upgraded = memory.add_temp_var(STD_TYPES::INTEGER);
-            memory<<asmfor_op2args(std::string("realtoint"), term, upgraded);
-            term = upgraded;
-        }
+        if (term.vartype == STD_TYPES::REAL)
+            // REMLAT: wywal przed oddawaniem.
+            memory<<std::string("; It will most likely die here. VM can't handle or.r\n");
         // all vars have the same type here.
         auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
-        memory<<asmfor_op3args(std::string("add"), expr, term, tempvar);
+        memory<<asmfor_op3args(std::string("or"), expr, term, tempvar);
     }
 ;
 term:
@@ -558,7 +578,10 @@ term:
                 memory<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
                 break;
             case MULOP::AND:
-                memory<<asmfor_op3args(std::string("mul"), term, factor, tempvar);
+                if (term.vartype == STD_TYPES::REAL)
+                    // REMLAT: wywal przed oddawaniem.
+                    memory<<std::string("; It will most likely die here. VM can't handle and.r\n");
+                memory<<asmfor_op3args(std::string("and"), term, factor, tempvar);
                 break;
             default:
                 break;
@@ -631,9 +654,9 @@ factor:
         auto factor = memory[$2];
         Entry zero = Entry();
         zero.type = ENTRY_TYPES::CONST;
-        zero.name_or_value = std::string("0");
-        zero.vartype = STD_TYPES::INTEGER;
-        Entry result = memory.add_temp_var(STD_TYPES::INTEGER);
+        zero.name_or_value = factor.vartype == STD_TYPES::INTEGER ? std::string("0") : std::string("0.0");
+        zero.vartype = factor.vartype;
+        Entry result = memory.add_temp_var(factor.vartype);
 
         print_if_debug("not "+std::to_string($2),"factor[4]->factor",ENABLEDP);
         memory<<asmfor_relop(std::string("je"),factor,zero,result);

@@ -21,7 +21,9 @@ for i in $INPUT; do
     echo ./tests/komp $i ./tests/original.asm
     ./tests/komp $i ./tests/original.asm
 
+    echo ./tests/vm ./output.asm
     mine=`./tests/vm ./output.asm`
+    echo ./tests/vm ./tests/original.asm
     komp=`./tests/vm ./tests/original.asm`
     if [ "$mine" != "$komp" ]; then
         echo ERROR IN TEST!

@@ -4,11 +4,12 @@ begin
     if 1 < 2 then
         begin
             if 1>2 then
-                write(-1)
+                write(1)
             else
-                write(4)
+                write(2)
         end
+    else if 1 <> 2 then write(3)
     else 
-        write(2);
-    write(3)
+        write(4);
+    write(5)
 end.
