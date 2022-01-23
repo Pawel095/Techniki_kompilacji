@@ -37,4 +37,5 @@ for i in $INPUT; do
     fi
 
 done
+rm -rf ./tests/original.asm
 exit 0
