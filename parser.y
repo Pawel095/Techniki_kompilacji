@@ -134,6 +134,7 @@ type:
     standard_type
     {
         $$ = TypeAllocator();
+        $$.type = $1;
     }
     | array_t '[' num_t array_range_t num_t ']' of_t standard_type
     {
@@ -563,5 +564,8 @@ factor: // Send memory adress up, not the bloody value.
         $$ = $2;
     }
     | not_t factor
+    {
+
+    }
 ;
 %%
