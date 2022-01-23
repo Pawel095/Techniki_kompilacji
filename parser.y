@@ -285,10 +285,10 @@ statement:
         print_if_debug("IF","statement[3]->expr",ENABLEDP);
         auto else_l = memory.make_label();
         auto end_l = memory.make_label();
-        // TODO: push labels to the label stack (else_l, end_l)
-        memory.if_label_stack.push_back(else_l);
-        memory.if_label_stack.push_back(end_l);
-        // TODO: check expression, then jump to the else_l.
+
+        memory.label_stack.push_back(else_l);
+        memory.label_stack.push_back(end_l);
+        
         Entry false_ = Entry();
         false_.type = ENTRY_TYPES::CONST;
         false_.name_or_value = std::string("0");
@@ -299,29 +299,52 @@ statement:
     then_t statement
     {
         // get end_l from label stack
-        auto end_l = memory.if_label_stack.back();
-        // TODO: insert jump to the end_l
+        auto end_l = memory.label_stack.back();
         memory<<std::string("jump.i ")+end_l.get_asm_var()+"\n";
     }
     else_t
     {
-        auto else_l = memory.if_label_stack[memory.if_label_stack.size()-2];
+        auto else_l = memory.label_stack[memory.label_stack.size()-2];
         memory<<else_l.get_asm_ptr() +"\n";
     }
     statement
     {
-        // TODO: insert end label and pop the label
-        auto end_l = memory.if_label_stack.back();
-
+        auto end_l = memory.label_stack.back();
         memory<<end_l.get_asm_ptr() +"\n";
-        memory.if_label_stack.pop_back();
-        memory.if_label_stack.pop_back();
+        memory.label_stack.pop_back();
+        memory.label_stack.pop_back();
     }
     | while_t
     {
+        auto loop_start_l = memory.make_label();
+        memory.label_stack.push_back(loop_start_l);
+        memory<<loop_start_l.get_asm_ptr()+"\n";
+    } 
+    expression
+    {
+        auto loop_end_l = memory.make_label();
+        auto expr = memory[$3];
+
+        Entry false_ = Entry();
+        false_.type = ENTRY_TYPES::CONST;
+        false_.name_or_value = std::string("0");
+        false_.vartype = STD_TYPES::INTEGER;
+
+        memory<<asmfor_op3args(std::string("je"), expr, false_, loop_end_l);
+        memory.label_stack.push_back(loop_end_l);
 
     }
-    expression do_t statement
+    do_t statement
+    {
+        auto loop_end_l = memory.label_stack.back();
+        memory.label_stack.pop_back();
+        auto loop_start_l = memory.label_stack.back();
+        memory.label_stack.pop_back();
+
+        memory<<std::string("jump.i ")+loop_start_l.get_asm_var()+'\n';
+        memory<<loop_end_l.get_asm_ptr()+"\n";
+
+    }
     | write_t '(' expression_list ')'
     {
         memory<<asmfor_op1arg_v(std::string("write"),*$3);
