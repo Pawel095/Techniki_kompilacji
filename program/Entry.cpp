@@ -16,6 +16,8 @@ std::string Entry::get_asm_var()
         return std::string("*BP+") + std::to_string(this->address);
     case ENTRY_TYPES::LABEL:
         return std::string("#") + this->name_or_value;
+    case ENTRY_TYPES::ARRAY:
+        return "*" + std::to_string(this->address);
 
     default:
         return std::string("___");

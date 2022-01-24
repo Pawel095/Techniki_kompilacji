@@ -6,7 +6,9 @@
 struct TypeAllocator
 {
     STD_TYPES type;
-    int size;
+    bool is_array;
+    int arr_size;
+    int arr_start;
 };
 
 #endif

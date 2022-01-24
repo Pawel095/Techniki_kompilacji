@@ -13,6 +13,8 @@ public:
     std::string name_or_value;
     int address = -1;
     int mem_index = -1;
+    int arr_start = -1;
+    int arr_size = -1;
     STD_TYPES vartype = STD_TYPES::UNDEFINED;
     std::vector<STD_TYPES> arg_types;
     std::string get_asm_var();

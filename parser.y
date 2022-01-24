@@ -90,7 +90,6 @@ program:
     {
         memory.set_scope(SCOPE::GLOBAL);
         print_if_debug("Scope set to global","program->subprogram_declarations",ENABLEDP);
-        // TODO: kod z funkcji :: close.
         memory<<std::string(ENTRYPOINT_NAME) + ":" + "\n";
     }
     compound_statement '.'
@@ -118,13 +117,23 @@ declarations:
         for (auto index : *$3)
         {
             auto entry = memory[index];
-            if (memory.get_scope()==SCOPE::GLOBAL)
-                entry.type=ENTRY_TYPES::VAR;
-            else
-                entry.type = ENTRY_TYPES::LOCAL_VAR;
-            entry.vartype=$5.type;
-            memory.update_entry(index,entry);
-            memory.allocate(index);
+
+            if (!$5.is_array){
+                if (memory.get_scope()==SCOPE::GLOBAL)
+                    entry.type=ENTRY_TYPES::VAR;
+                else
+                    entry.type = ENTRY_TYPES::LOCAL_VAR;
+                entry.vartype=$5.type;
+                memory.update_entry(index,entry);
+                memory.allocate(index);
+            }else{
+                entry.type=ENTRY_TYPES::ARRAY;
+                entry.vartype=$5.type;
+                entry.arr_start = $5.arr_start;
+                entry.arr_size = $5.arr_size;
+                memory.update_entry(index,entry);
+                memory.allocate(index);
+            }
         }
         delete $3;
     }
@@ -135,10 +144,25 @@ type:
     {
         $$ = TypeAllocator();
         $$.type = $1;
+        $$.is_array=false;
     }
     | array_t '[' num_t array_range_t num_t ']' of_t standard_type
     {
-        // TODO: array type
+        auto start = memory[$3];
+        auto end = memory[$5];
+        if (start.vartype == STD_TYPES::REAL || end.vartype == STD_TYPES::REAL)
+            // TODO: Die here.
+            BREAKPOINT;
+
+        int start_i = std::stoi(start.name_or_value);
+        int end_i = std::stoi(end.name_or_value);
+
+        $$ = TypeAllocator();
+        $$.type=$8;
+        $$.arr_size = end_i-start_i+1;
+        $$.arr_start=start_i;
+        $$.is_array=true;
+
     }
 ;
 standard_type:
@@ -372,8 +396,37 @@ variable:
             $$ = $1;
         }
     }
-    | ident_t '[' expression ']' // TODO: array access
+    | ident_t '[' expression ']'
     {
+        auto arr = memory[$1];
+        auto expr = memory[$3];
+        // Downgrade type, only integer can access array.
+        if (expr.vartype!=STD_TYPES::INTEGER){
+            auto inte = memory.add_temp_var(STD_TYPES::INTEGER);
+            memory<<asmfor_op2args(std::string("realtoint"), expr, inte);
+            expr = inte;
+        }
+        // calculate the address in case of global.
+        if (memory.get_scope() == SCOPE::GLOBAL){
+            auto absolute_index = memory.add_temp_var(STD_TYPES::INTEGER);
+            auto delta_bytes = memory.add_temp_var(STD_TYPES::INTEGER);
+            auto final_addr = memory.add_temp_var(STD_TYPES::INTEGER);
+
+            Entry multiconst = Entry();
+            multiconst.name_or_value = std::to_string(arr.arr_start);
+            multiconst.vartype = STD_TYPES::INTEGER;
+            multiconst.type = ENTRY_TYPES::CONST;
+
+            memory<<asmfor_op3args(std::string("sub"),expr,multiconst,absolute_index);
+            multiconst.name_or_value = std::to_string(arr.vartype == STD_TYPES::INTEGER ? 4 : 8);
+            memory<<asmfor_op3args(std::string("mul"),absolute_index,multiconst,delta_bytes);
+            multiconst.name_or_value = std::to_string(arr.address);
+            memory<<asmfor_op3args(std::string("add"),delta_bytes,multiconst,final_addr);
+
+            final_addr.type=ENTRY_TYPES::ARRAY;
+            memory.update_entry(final_addr.mem_index,final_addr);
+            $$ = final_addr.mem_index;
+        }
     }
 ;
 procedure_statement:
@@ -553,8 +606,8 @@ simple_expression:
                 term = upgraded;
             }
         }
+        // REMLAT: wywal przed oddawaniem.
         if (term.vartype == STD_TYPES::REAL)
-            // REMLAT: wywal przed oddawaniem.
             memory<<std::string("; It will most likely die here. VM can't handle or.r\n");
         // all vars have the same type here.
         auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
@@ -626,7 +679,6 @@ factor:
         print_if_debug(*$3,"factor[1]->expression_list",ENABLEDP);
         auto func = memory[$1];
         if (func.type!=ENTRY_TYPES::FUNC){
-            // TODO: some error message?
             BREAKPOINT;
         }
 

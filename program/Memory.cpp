@@ -65,14 +65,29 @@ void Memory::initial_bp(bool has_return_var)
 fort::char_table Memory::dump()
 {
     fort::char_table out;
-    out << fort::header << "ENTRY_TYPE"
+    out << fort::header
+        << "ENTRY_TYPE"
         << "name_or_value"
         << "address"
         << "mem_index"
-        << "STD_TYPE" << fort::endr;
+        << "arr_start"
+        << "arr_size"
+        << "STD_TYPE"
+        << "asm_var()"
+        << "asm_ptr()"
+        << fort::endr;
     for (auto e : this->table)
     {
-        out << enum2str(e.type) << e.name_or_value << e.get_asm_var() << e.mem_index << enum2str(e.vartype) << fort::endr;
+        out << enum2str(e.type)
+            << e.name_or_value
+            << e.address
+            << e.mem_index
+            << (e.arr_start == -1 ? "___" : std::to_string(e.arr_start))
+            << (e.arr_size == -1 ? "___" : std::to_string(e.arr_size))
+            << enum2str(e.vartype)
+            << e.get_asm_var()
+            << (e.type == ENTRY_TYPES::CONST ? "___" : e.get_asm_ptr())
+            << fort::endr;
     }
     return out;
 }
@@ -142,6 +157,19 @@ void Memory::allocate(int id)
     {
         e->address = this->bp_up;
         this->bp_up += 4;
+    }
+    else if (e->type == ENTRY_TYPES::ARRAY)
+    {
+        e->address = this->address_pointer;
+        switch (e->vartype)
+        {
+        case STD_TYPES::INTEGER:
+            this->address_pointer += 4 * e->arr_size;
+            break;
+        case STD_TYPES::REAL:
+            this->address_pointer += 8 * e->arr_size;
+            break;
+        }
     }
     else
     {
