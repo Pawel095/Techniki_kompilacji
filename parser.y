@@ -383,7 +383,15 @@ variable:
     {
         print_if_debug(memory[$1].name_or_value,"variable[0]->ident_t",ENABLEDP);
         auto ident = memory[$1];
-        if (ident.type==ENTRY_TYPES::FUNC){
+
+        // special case for global variables inside functions
+        if (ident.type==ENTRY_TYPES::IGNORE && memory.get_scope() == SCOPE::LOCAL){
+            if (memory.exists(ident.name_or_value,true)){
+                ident = memory.get(ident.name_or_value);
+                memory.remove_by_index($1);
+                $$ = ident.mem_index;
+            }
+        }else if (ident.type==ENTRY_TYPES::FUNC){
             if (memory.get_scope() == SCOPE::LOCAL &&memory.current_function.name_or_value == ident.name_or_value){
                 print_if_debug(memory[$1].name_or_value + " is actually a return statement.","variable[0]->ident_t",ENABLEDP);    
             }else{
@@ -427,6 +435,7 @@ variable:
             memory<<asmfor_op3args(std::string("add"),delta_bytes,multiconst,final_addr);
 
             final_addr.type=ENTRY_TYPES::ARRAY;
+            final_addr.vartype=arr.vartype;
             memory.update_entry(final_addr.mem_index,final_addr);
             $$ = final_addr.mem_index;
         }

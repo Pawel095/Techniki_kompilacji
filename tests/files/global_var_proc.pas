@@ -3,13 +3,12 @@ var g:real;
 
 
 procedure setg(r:real);
-var g:integer;
 begin
-    g:=r
+    g:=r+g
 end;
 
 begin
-    write(g[1]);
+    write(g);
     setg(5.0);
-    write(g[1])
+    write(g)
 end.

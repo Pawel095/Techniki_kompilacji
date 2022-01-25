@@ -179,6 +179,10 @@ void Memory::allocate(int id)
     }
 }
 
+void Memory::remove_by_index(int id)
+{
+    this->table.erase(this->table.begin() + id);
+}
 Entry Memory::get(std::string id)
 {
     // Search local scope first, then global.
@@ -202,6 +206,17 @@ Entry Memory::get(std::string id)
     return Entry();
 }
 
+bool Memory::exists(std::string id, bool only_globals)
+{
+    for (size_t i = 0; i < this->table.size(); i++)
+    {
+        auto a = this->table[i];
+        if (a.name_or_value == id)
+        {
+            return true;
+        }
+    }
+}
 bool Memory::exists(std::string id)
 {
     if (this->scope == SCOPE::GLOBAL)

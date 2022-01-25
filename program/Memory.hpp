@@ -38,6 +38,7 @@ public:
     int local_temp_bytes();
 
     void initial_bp(bool has_return_var);
+    void remove_by_index(int id);
 
     int add_entry(Entry e);
     Entry add_temp_var(STD_TYPES type);
@@ -45,6 +46,7 @@ public:
 
     Entry get(std::string id);
     bool exists(std::string id);
+    bool exists(std::string id, bool only_globals);
 
     void update_entry(int index, Entry e);
 
