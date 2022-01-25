@@ -67,7 +67,7 @@ fort::char_table Memory::dump()
     fort::char_table out;
     out << fort::header
         << "ENTRY_TYPE"
-        << "name_or_value"
+        << "name"
         << "address"
         << "mem_index"
         << "arr_start"

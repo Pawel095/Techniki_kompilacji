@@ -117,20 +117,23 @@ declarations:
         for (auto index : *$3)
         {
             auto entry = memory[index];
-
-            if (!$5.is_array){
-                if (memory.get_scope()==SCOPE::GLOBAL)
+            if (memory.get_scope() == SCOPE::GLOBAL){
+                if (!$5.is_array){
+                    entry.vartype=$5.type;
                     entry.type=ENTRY_TYPES::VAR;
-                else
-                    entry.type = ENTRY_TYPES::LOCAL_VAR;
-                entry.vartype=$5.type;
-                memory.update_entry(index,entry);
-                memory.allocate(index);
+                    memory.update_entry(index,entry);
+                    memory.allocate(index);
+                }else{
+                    entry.type=ENTRY_TYPES::ARRAY;
+                    entry.vartype=$5.type;
+                    entry.arr_start = $5.arr_start;
+                    entry.arr_size = $5.arr_size;
+                    memory.update_entry(index,entry);
+                    memory.allocate(index);
+                }
             }else{
-                entry.type=ENTRY_TYPES::ARRAY;
                 entry.vartype=$5.type;
-                entry.arr_start = $5.arr_start;
-                entry.arr_size = $5.arr_size;
+                entry.type=ENTRY_TYPES::LOCAL_VAR;
                 memory.update_entry(index,entry);
                 memory.allocate(index);
             }

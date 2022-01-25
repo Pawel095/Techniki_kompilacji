@@ -25,8 +25,16 @@ begin
     p2:=temp/a
 end;
 
+procedure level1(b:integer;c:real);
+var t1:real;
+var t2:integer;
+begin
+    t1:=p1(b);
+    t2:=p2(c);
+    show(t1,t2)
+end;
 
 begin
-    show(p1(4),p2(1.0E2));
+    level1(4,0.1E4);
     write(g)
 end.

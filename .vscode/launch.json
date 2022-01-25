@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/files/array.pas"
+                "./tests/global_var_proc.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
