@@ -26,7 +26,15 @@ void cleanup()
 bool isInteger(std::string a)
 {
     std::string::size_type dst, ist;
-    std::stod(a, &dst);
-    std::stoi(a, &ist);
+    try
+    {
+            std::stod(a, &dst);
+            std::stoi(a, &ist);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "the value is too big, assumint it is an integer." << '\n';
+        return true;
+    }
     return dst == ist;
 }
