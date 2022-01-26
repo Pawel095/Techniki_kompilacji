@@ -216,6 +216,7 @@ bool Memory::exists(std::string id, bool only_globals)
             return true;
         }
     }
+    return false;
 }
 bool Memory::exists(std::string id)
 {

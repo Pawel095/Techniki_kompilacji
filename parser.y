@@ -1,20 +1,25 @@
 %define parse.error detailed 
 
-
-%{
-    // REMLAT: disable debug
-    bool ENABLEDP=true;
-    const char* ENTRYPOINT_NAME = "entrypoint";
-%}
-
 %code requires{
     #include "global.hpp"
     #include "debug/printer.hpp"
     #include "asmfor/asmfor.hpp"
 }
 
+
+%{
+    // REMLAT: disable debug
+    bool ENABLEDP=false;
+    const char* ENTRYPOINT_NAME = "entrypoint";
+
+    #include <vector>
+    std::vector<int> identifier_list = std::vector<int>();
+    std::vector<int> parameter_list = std::vector<int>();
+    std::vector<int> expression_list = std::vector<int>();
+    std::vector<int> arguments = std::vector<int>();
+%}
+
 %union{
-    std::vector<int>* symtable_index_v;
     int symtable_index;
     RELOP relop;
     STD_TYPES std_type;
@@ -62,14 +67,8 @@
 %type <symtable_index> term
 %type <symtable_index> simple_expression
 %type <symtable_index> expression
-%type <symtable_index_v> expression_list
 %type <symtable_index> variable
-%type <symtable_index_v> identifier_list
-%type <symtable_index_v> parameter_list
-%type <symtable_index_v> arguments
 %type <symtable_index> subprogram_head
-
-%destructor {delete $$;} <symtable_index_v>
 
 %%
 
@@ -79,7 +78,6 @@ program:
         std::string msg = std::string("nazwa programu: ") + std::string(memory[$2].name_or_value);
         print_if_debug(msg,"program",ENABLEDP);
         memory<<std::string("jump.i #")+ENTRYPOINT_NAME + "\n";
-        delete $4;
     }
     declarations 
     {
@@ -100,21 +98,21 @@ program:
 identifier_list:
     ident_t
     {
-        $$ = new std::vector<int>();
-        $$->push_back($1);
+        identifier_list = std::vector<int>();
+        identifier_list.push_back($1);
         print_if_debug(memory[$1].name_or_value,"identifier_list[0]->ident_t",ENABLEDP);
     }
     | identifier_list ',' ident_t
     {
-        $$->push_back($3);
-        print_if_debug(*$1,"identifier_list[1]->identifier_list",ENABLEDP);
+        identifier_list.push_back($3);
+        print_if_debug(identifier_list,"identifier_list[1]->identifier_list",ENABLEDP);
         print_if_debug(memory[$3].name_or_value,"identifier_list[1]->ident_t",ENABLEDP);
     }
 ;
 declarations:
     declarations var_t identifier_list ':' type ';'
     {
-        for (auto index : *$3)
+        for (auto index : identifier_list)
         {
             auto entry = memory[index];
             if (memory.get_scope() == SCOPE::GLOBAL){
@@ -138,7 +136,6 @@ declarations:
                 memory.allocate(index);
             }
         }
-        delete $3;
     }
     | %empty
 ;
@@ -201,9 +198,9 @@ subprogram_head:
         memory.allocate($2);
         func = memory[$2];
         // add args to symtable, update func argtypes.
-        while (! $3->empty()){
-            int id = $3->back();
-            $3->pop_back();
+        while (! arguments.empty()){
+            int id = arguments.back();
+            arguments.pop_back();
             auto arg = memory[id];
 
             func.arg_types.insert(func.arg_types.begin(),arg.vartype);
@@ -214,7 +211,6 @@ subprogram_head:
         memory.update_entry($2,func);
         memory.current_function = func;
         // add return value to symtable
-        delete $3;
         $$ = $2;
     }
     | procedure_t ident_t arguments ';'
@@ -223,9 +219,9 @@ subprogram_head:
         auto func = memory[$2];
         func.type=ENTRY_TYPES::PROCEDURE;
         // add args to symtable, update func argtypes.
-        while (! $3->empty()){
-            int id = $3->back();
-            $3->pop_back();
+        while (! arguments.empty()){
+            int id = arguments.back();
+            arguments.pop_back();
             auto arg = memory[id];
 
             func.arg_types.insert(func.arg_types.begin(),arg.vartype);
@@ -234,42 +230,40 @@ subprogram_head:
             memory.allocate(id);
         }
         memory.update_entry($2,func);
-        delete $3;
         $$ = $2;
     }
 ;
 arguments:
     '(' parameter_list ')'
     {
-        $$ = $2;
+        arguments = parameter_list;
     }
     | %empty
     {
-        $$ = new std::vector<int>();
+        arguments = std::vector<int>();
     }
 ;
 parameter_list:
     identifier_list ':' type
     {
-        print_if_debug(*$1,"parameter_list[0]->identifier_list",ENABLEDP);
-        for (auto id:*$1) {
+        print_if_debug(identifier_list,"parameter_list[0]->identifier_list",ENABLEDP);
+        for (auto id:identifier_list) {
             auto entry = memory[id];
             entry.vartype = $3.type;
             memory.update_entry(id,entry);
         }
-        $$ = $1;
+        parameter_list = identifier_list;
     }
     | parameter_list ';' identifier_list ':' type
     {
-        print_if_debug(*$1,"parameter_list[1]->parameter_list",ENABLEDP);
-        print_if_debug(*$3,"parameter_list[1]->identifier_list",ENABLEDP);
-        for (auto index:*$3) {
-            $$->push_back(index);
+        print_if_debug(parameter_list,"parameter_list[1]->parameter_list",ENABLEDP);
+        print_if_debug(identifier_list,"parameter_list[1]->identifier_list",ENABLEDP);
+        for (auto index:identifier_list) {
+            parameter_list.push_back(index);
             auto entry = memory[index];
             entry.vartype = $5.type;
             memory.update_entry(index,entry);
         }
-        delete $3;
     }
 ;
 compound_statement: 
@@ -374,8 +368,7 @@ statement:
     }
     | write_t '(' expression_list ')'
     {
-        memory<<asmfor_op1arg_v(std::string("write"),*$3);
-        delete $3;
+        memory<<asmfor_op1arg_v(std::string("write"),expression_list);
     }
 ;
 variable:
@@ -454,10 +447,10 @@ procedure_statement:
         // standalone call with arguments
         // func(a,2);
         print_if_debug(memory[$1].name_or_value,"procedure_statement[1]->ident_t",ENABLEDP);
-        print_if_debug(*$3,"procedure_statement[1]->expression_list",ENABLEDP);
+        print_if_debug(expression_list,"procedure_statement[1]->expression_list",ENABLEDP);
         auto func = memory[$1];
-        for(size_t i=0;i< $3->size();i++) {
-            int id = $3->at(i);
+        for(size_t i=0;i< expression_list.size();i++) {
+            int id = expression_list.at(i);
             STD_TYPES funcargtype = func.arg_types[i];
             Entry arg = memory[id];
 
@@ -484,19 +477,18 @@ procedure_statement:
             }
         }
         memory<<std::string("call.i #") + func.name_or_value+"\n";
-        memory<<std::string("incsp.i #") + std::to_string($3->size() * 4) +"\n";
-        delete $3;
+        memory<<std::string("incsp.i #") + std::to_string(expression_list.size() * 4) +"\n";
     }
 ;
 expression_list:
     expression
     {
-        $$ = new std::vector<int>();
-        $$->push_back($1);
+        expression_list = std::vector<int>();
+        expression_list.push_back($1);
     }
     | expression_list ',' expression {
-        print_if_debug(*$1,"expression_list[1]->expression_list",ENABLEDP);
-        $$->push_back($3);
+        print_if_debug(expression_list,"expression_list[1]->expression_list",ENABLEDP);
+        expression_list.push_back($3);
     }
 ;
 expression:
@@ -688,14 +680,14 @@ factor:
         // assign call with arguments
         // func(a,2);
         print_if_debug(memory[$1].name_or_value,"factor[1]->ident_t",ENABLEDP);
-        print_if_debug(*$3,"factor[1]->expression_list",ENABLEDP);
+        print_if_debug(expression_list,"factor[1]->expression_list",ENABLEDP);
         auto func = memory[$1];
         if (func.type!=ENTRY_TYPES::FUNC){
             BREAKPOINT;
         }
 
-        for(size_t i=0;i< $3->size();i++) {
-            int id = $3->at(i);
+        for(size_t i=0;i< expression_list.size();i++) {
+            int id = expression_list.at(i);
             STD_TYPES funcargtype = func.arg_types[i];
             Entry arg = memory[id];
 
@@ -724,8 +716,7 @@ factor:
         auto return_value = memory.add_temp_var(func.vartype);
         memory<<std::string("push.i ") + return_value.get_asm_ptr()+"\n";
         memory<<std::string("call.i #") + func.name_or_value+"\n";
-        memory<<std::string("incsp.i #") + std::to_string($3->size() * 4) +"\n";
-        delete $3;
+        memory<<std::string("incsp.i #") + std::to_string(expression_list.size() * 4) +"\n";
         $$ = return_value.mem_index;
     }
     | num_t // a number
