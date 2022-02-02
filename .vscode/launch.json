@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out",
             "args": [
-                "./tests/global_var_proc.pas"
+                "./tests/files/gcd.pas"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

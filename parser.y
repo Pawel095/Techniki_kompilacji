@@ -8,8 +8,7 @@
 
 
 %{
-    // REMLAT: disable debug
-    bool ENABLEDP=false;
+    bool ENABLEDP=true;
     const char* ENTRYPOINT_NAME = "entrypoint";
 
     #include <vector>
@@ -49,10 +48,8 @@
 %token if_t
 %token else_t
 %token then_t
-
 %token write_t
 %token read_t
-
 %token assign_op_t
 %token <relop> relop_t
 %token <sign> sign_t
@@ -151,7 +148,6 @@ type:
         auto start = memory[$3];
         auto end = memory[$5];
         if (start.vartype == STD_TYPES::REAL || end.vartype == STD_TYPES::REAL)
-            // TODO: Die here.
             BREAKPOINT;
 
         int start_i = std::stoi(start.name_or_value);
@@ -369,6 +365,10 @@ statement:
     | write_t '(' expression_list ')'
     {
         memory<<asmfor_op1arg_v(std::string("write"),expression_list);
+    }
+    | read_t '(' identifier_list ')'
+    {
+        memory<<asmfor_op1arg_v(std::string("read"),identifier_list);
     }
 ;
 variable:
@@ -610,9 +610,6 @@ simple_expression:
                 term = upgraded;
             }
         }
-        // REMLAT: wywal przed oddawaniem.
-        if (term.vartype == STD_TYPES::REAL)
-            memory<<std::string("; It will most likely die here. VM can't handle or.r\n");
         // all vars have the same type here.
         auto tempvar = memory.add_temp_var(STD_TYPES::INTEGER);
         memory<<asmfor_op3args(std::string("or"), expr, term, tempvar);
@@ -658,9 +655,6 @@ term:
                 memory<<asmfor_op3args(std::string("mod"), term, factor, tempvar);
                 break;
             case MULOP::AND:
-                if (term.vartype == STD_TYPES::REAL)
-                    // REMLAT: wywal przed oddawaniem.
-                    memory<<std::string("; It will most likely die here. VM can't handle and.r\n");
                 memory<<asmfor_op3args(std::string("and"), term, factor, tempvar);
                 break;
             default:

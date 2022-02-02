@@ -183,6 +183,10 @@ NUM {DIGITS}(\.{DIGITS})?(E[+-]?{DIGITS})?
     return write_t;
 }
 
+"read" {
+    print_if_debug(yytext,"read_t",ENABLEDL);
+    return read_t;
+}
 
 {NUM} {
     print_if_debug(yytext,"num_t",ENABLEDL);

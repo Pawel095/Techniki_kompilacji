@@ -50,14 +50,11 @@ lexer.cpp: lexer.l
 parser.cpp parser.hpp: parser.y lexer.cpp
 	$(bisoncmd) --defines=parser.hpp -o parser.cpp parser.y
 
-# REMLAT: Only for debug, kill later
-headers: $(headers)
-
 cleanobj:
 	rm -rf $(objs)
 
 cleangen:
-	rm -rf parser.hpp parser.cpp lexer.cpp parser.dot parser.output output.asm
+	rm -rf parser.hpp parser.cpp lexer.cpp parser.dot parser.output output.asm parser.gv
 
 clean: cleanobj cleangen
 	rm -rf out
